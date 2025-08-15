@@ -38,6 +38,7 @@ import {
     DEFAULT_OPENROUTER_MODEL_NAME,
 } from './aiConfigSchema';
 import { parseShopifyConfig, ShopifyAuthConfig } from './shopifyConfig';
+import { GoogleAnalyticsConfig, parseGoogleAnalyticsConfig } from './googleAnalyticsConfig';
 
 enum TokenEnvironmentVariable {
     SERVICE_ACCOUNT = 'LD_SETUP_SERVICE_ACCOUNT_TOKEN',
@@ -790,6 +791,9 @@ export type LightdashConfig = {
     mcp: {
         enabled: boolean;
     };
+    customRoles: {
+        enabled: boolean;
+    };
 };
 
 export type SlackConfig = {
@@ -940,6 +944,7 @@ export type AuthConfig = {
         maxExpirationTimeInDays: number | undefined;
     };
     shopify: ShopifyAuthConfig | undefined;
+    googleAnalytics: GoogleAnalyticsConfig | undefined;
     oauthServer?: {
         accessTokenLifetime: number; // in seconds (default = 1 hour)
         refreshTokenLifetime: number; // in seconds (default = 2 weeks)
@@ -1032,6 +1037,9 @@ export const parseConfig = (): LightdashConfig => {
                       apiKey: process.env.AZURE_AI_API_KEY,
                       apiVersion: process.env.AZURE_AI_API_VERSION,
                       deploymentName: process.env.AZURE_AI_DEPLOYMENT_NAME,
+                      temperature: getFloatFromEnvironmentVariable(
+                          'AZURE_AI_TEMPERATURE',
+                      ),
                   }
                 : undefined,
             openai: process.env.OPENAI_API_KEY
@@ -1041,6 +1049,8 @@ export const parseConfig = (): LightdashConfig => {
                           process.env.OPENAI_MODEL_NAME ||
                           DEFAULT_OPENAI_MODEL_NAME,
                       baseUrl: process.env.OPENAI_BASE_URL,
+                      temperature:
+                          getFloatFromEnvironmentVariable('OPENAI_TEMPERATURE'),
                   }
                 : undefined,
             anthropic: process.env.ANTHROPIC_API_KEY
@@ -1049,6 +1059,9 @@ export const parseConfig = (): LightdashConfig => {
                       modelName:
                           process.env.ANTHROPIC_MODEL_NAME ||
                           DEFAULT_ANTHROPIC_MODEL_NAME,
+                      temperature: getFloatFromEnvironmentVariable(
+                          'ANTHROPIC_TEMPERATURE',
+                      ),
                   }
                 : undefined,
             openrouter: process.env.OPENROUTER_API_KEY
@@ -1060,6 +1073,9 @@ export const parseConfig = (): LightdashConfig => {
                       sortOrder: process.env.OPENROUTER_SORT_ORDER,
                       allowedProviders: getArrayFromCommaSeparatedList(
                           'OPENROUTER_ALLOWED_PROVIDERS',
+                      ),
+                      temperature: getFloatFromEnvironmentVariable(
+                          'OPENROUTER_TEMPERATURE',
                       ),
                   }
                 : undefined,
@@ -1199,6 +1215,7 @@ export const parseConfig = (): LightdashConfig => {
                     ) ?? undefined,
             },
             shopify: parseShopifyConfig(),
+            googleAnalytics: parseGoogleAnalyticsConfig(),
             disablePasswordAuthentication:
                 process.env.AUTH_DISABLE_PASSWORD_AUTHENTICATION === 'true',
             enableGroupSync: process.env.AUTH_ENABLE_GROUP_SYNC === 'true',
@@ -1500,6 +1517,9 @@ export const parseConfig = (): LightdashConfig => {
         updateSetup: getUpdateSetupConfig(),
         mcp: {
             enabled: process.env.MCP_ENABLED === 'true',
+        },
+        customRoles: {
+            enabled: process.env.CUSTOM_ROLES_ENABLED === 'true',
         },
     };
 };

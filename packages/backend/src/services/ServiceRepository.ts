@@ -47,6 +47,7 @@ import { UnfurlService } from './UnfurlService/UnfurlService';
 import { UserAttributesService } from './UserAttributesService/UserAttributesService';
 import { UserService } from './UserService';
 import { ValidationService } from './ValidationService/ValidationService';
+import { ConnectionService } from './ConnectionsService';
 /**
  * Interface outlining all services available under the `ServiceRepository`. Add new services to
  * this list (in alphabetical order, please!) to have typescript help ensure you've updated the
@@ -76,6 +77,7 @@ interface ServiceManifest {
     searchService: SearchService;
     shareService: ShareService;
     shopService: ShopService;
+    connectionsService: ConnectionService;
     slackIntegrationService: SlackIntegrationService;
     sshKeyPairService: SshKeyPairService;
     spaceService: SpaceService;
@@ -105,6 +107,7 @@ interface ServiceManifest {
     serviceAccountService: unknown;
     instanceConfigurationService: unknown;
     mcpService: unknown;
+    rolesService: unknown;
 }
 
 /**
@@ -636,6 +639,16 @@ export class ServiceRepository
         );
     }
 
+    public getConnectionsService(): ConnectionService {
+        return this.getService(
+            'connectionsService',
+            () =>
+                new ConnectionService({
+                    database: this.models.getUserModel()['database'],// or this.models.getDb(), depending on what `UserService` uses
+                }),
+        );
+    }
+
     public getSshKeyPairService(): SshKeyPairService {
         return this.getService(
             'sshKeyPairService',
@@ -882,6 +895,10 @@ export class ServiceRepository
         return this.getService('aiAgentService');
     }
 
+    public getRolesService<RolesServiceImplT>(): RolesServiceImplT {
+        return this.getService('rolesService');
+    }
+
     public getScimService<ScimServiceImplT>(): ScimServiceImplT {
         return this.getService('scimService');
     }
@@ -944,6 +961,7 @@ export class ServiceRepository
                     analytics: this.context.lightdashAnalytics,
                     projectParametersModel:
                         this.models.getProjectParametersModel(),
+                    projectModel: this.models.getProjectModel(),
                 }),
         );
     }
