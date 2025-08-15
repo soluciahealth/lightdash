@@ -467,7 +467,25 @@ export default class EmailClient {
         });
     }
 
+   public async sendWelcomeEmail({
+    recipient,
+    firstName,
+    }: {
+        recipient: string;
+        firstName?: string;
+    }): Promise<void> {
+        const subject = 'Welcome to Solucia Analytics!';
+        const text = `Welcome${firstName ? `, ${firstName}` : ''}!\n\nThank you for installing Solucia Analytics. We are here to help! Please contact us if you have any problems.\n\nBest,\nMatt`;
 
+        return this.sendEmail({
+            to: recipient,
+            subject,
+            template: 'welcomeemail', 
+            context: { firstName },
+            text,
+        });
+    }
+    
     public async sendGenericNotificationEmail(
         to: string[],
         subject: string,

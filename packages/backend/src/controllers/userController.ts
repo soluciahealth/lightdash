@@ -45,6 +45,8 @@ import {
     unauthorisedInDemo,
 } from './authentication';
 import { BaseController } from './baseController';
+import { parseConfig } from '../config/parseConfig';
+import EmailClient from '../clients/EmailClient/EmailClient';
 
 @Route('/api/v1/user')
 @Response<ApiErrorPayload>('default', 'Error')
@@ -96,7 +98,15 @@ export class UserController extends BaseController {
                 'Default organization UUID not found in environment variables',
             );
         }
-        this.services.getUserService().joinOrgShopify(sessionUser, orgUuid)
+        await this.services.getUserService().joinOrgShopify(sessionUser, orgUuid);
+
+        // const lightdashConfig = parseConfig();
+        // const emailClient = new EmailClient({ lightdashConfig });
+        // await emailClient.sendWelcomeEmail({
+        //     recipient: sessionUser.email,
+        //     firstName: sessionUser.firstName,
+        // });
+        (sessionUser as any).organizationUuid = orgUuid;
 
         return new Promise((resolve, reject) => {
             req.login(sessionUser, (err) => {

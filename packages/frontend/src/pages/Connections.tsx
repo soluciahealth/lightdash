@@ -16,7 +16,6 @@ import GaConnectedModal from '../components/GAConnectedModal';
 const Connections: FC = () => {
     const theme = useMantineTheme();
     const params = useParams<{ projectUuid: string }>();
-    const projectUuid = params.projectUuid;
 
     const { data: connections } = useConnections() || [];
     const connectedMap = Object.fromEntries(
@@ -27,6 +26,7 @@ const Connections: FC = () => {
     const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null);
     const [selectedConfig, setSelectedConfig] = useState<any | null>(null);
     const [shopUrl, setShopUrl] = useState<string>('');
+
 
 
     const isLoading = false;
@@ -68,6 +68,7 @@ const Connections: FC = () => {
         }
     };
 
+
     const handleRefresh = () => {
         lightdashApi({
             url: selectedConfig.ingestEndpoint,
@@ -87,7 +88,7 @@ const Connections: FC = () => {
             <Stack spacing="xl">
                 <Title order={2}>Connections</Title>
                 <Text color="dimmed">
-                    Connect and sync data from your external sources.
+                    Connect and sync data from your external sources. Refresh page to verify connection status.
                 </Text>
 
                 <Card withBorder shadow="sm" padding="lg" radius="md">
@@ -152,6 +153,7 @@ const Connections: FC = () => {
                     </Stack>
                 </Card>
             </Stack>
+
         </Page>
     );
 };

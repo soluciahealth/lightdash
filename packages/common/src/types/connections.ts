@@ -9,4 +9,5 @@ export interface Connection {
     userUuid: string | null;
     propertyId?: string | null; // e.g., for Google Analytics
     shopUrl?: string | null; // e.g., for Shopify
+
 }
