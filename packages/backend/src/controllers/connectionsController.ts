@@ -35,6 +35,7 @@ export const mapDbConnectionToConnection = (row: DbConnection): Connection => ({
 });
 
 
+
 @Route('/api/v1/connections')
 @Response<ApiErrorPayload>('default', 'Error')
 @Tags('Connections')
@@ -54,7 +55,6 @@ export class ConnectionsController extends BaseController {
         const connectionsService = req.services.getConnectionsService();
         const connectionsInDb: DbConnection[] = await connectionsService.getConnectionsByUserUuid(req.user!.userUuid);
         const connections: Connection[] = connectionsInDb.map((row) => mapDbConnectionToConnection(row));
-
 
         this.setStatus(200);
         return {
