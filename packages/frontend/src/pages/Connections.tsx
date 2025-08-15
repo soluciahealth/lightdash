@@ -24,20 +24,9 @@ const Connections: FC = () => {
 
     const [opened, { open, close }] = useDisclosure(false);
     const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null);
-<<<<<<< HEAD
     const [selectedConfig, setSelectedConfig] = useState<any | null>(null);
     const [shopUrl, setShopUrl] = useState<string>('');
-=======
 
-    const updateConnectionName = (newName: string) => {
-    if (selectedConnection) {
-        setSelectedConnection({
-            ...selectedConnection,
-            name: newName,
-        });
-    }
-};
->>>>>>> dev
 
 
     const isLoading = false;
@@ -164,17 +153,7 @@ const Connections: FC = () => {
                     </Stack>
                 </Card>
             </Stack>
-<<<<<<< HEAD
-=======
-            <ConnectionsModal
-                opened={opened}
-                onClose={close}
-                selectedConnection={selectedConnection}
-                updateConnection={updateConnectionName}
-                handleConnect={handleConnect}
-                handleRefresh={handleRefresh}
-            />
->>>>>>> dev
+
         </Page>
     );
 };
