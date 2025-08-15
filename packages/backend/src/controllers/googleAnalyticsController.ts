@@ -12,7 +12,7 @@ import {
   Response as TsoaResponse,
 } from '@tsoa/runtime';
 import { google } from 'googleapis';
-import { ApiSuccessEmpty, ConnectionType } from '@lightdash/common'; // ensure enum has GOOGLE_ANALYTICS
+import { ApiSuccessEmpty, ConnectionType, ApiSuccess } from '@lightdash/common'; // ensure enum has GOOGLE_ANALYTICS
 import { ParameterError, ForbiddenError } from '@lightdash/common';
 import { runDataIngestion } from '../services/ShopifyDataIngestion';
 import { LightdashRequestMethodHeader, ApiErrorPayload } from '@lightdash/common';
@@ -69,7 +69,7 @@ export class GoogleAnalyticsController extends Controller {
   public async listAccounts(
     @Request() req: express.Request,
     @Query('connection') connection: string,
-  ): Promise<ApiSuccessEmpty> {
+  ): Promise<ApiSuccess<any>> {
     if (!connection) throw new ParameterError('Missing connection');
 
     const admin = await this.getAdminClientForConnection(req, connection);
@@ -89,7 +89,7 @@ export class GoogleAnalyticsController extends Controller {
       })),
     }
 
-    return { "status": "ok", results: obj };
+    return { status: "ok", results: obj };
   }
 
   /**
@@ -100,7 +100,7 @@ export class GoogleAnalyticsController extends Controller {
     @Request() req: express.Request,
     @Query() connection: string,
     @Query() account: string, // "accounts/123"
-  ): Promise<ApiSuccessEmpty> {
+  ): Promise<ApiSuccess<any>> {
     if (!connection || !account) throw new ParameterError('Missing connection or account');
 
     const admin = await this.getAdminClientForConnection(req, connection);
@@ -125,7 +125,7 @@ export class GoogleAnalyticsController extends Controller {
       })),
     };
 
-    return { "status": "ok", results: obj };
+    return { status: "ok", results: obj };
 
   }
 
@@ -136,7 +136,7 @@ export class GoogleAnalyticsController extends Controller {
   public async selectProperty(
     @Request() req: express.Request,
     @Body() body: SelectBody,
-  ): Promise<{ ok: true; property_id: string }> {
+  ): Promise<ApiSuccess<any>> {
     const { connectionUuid, account, property } = body ?? ({} as SelectBody);
     if (!connectionUuid || !account || !property) {
       throw new ParameterError('Missing connectionUuid/account/property');
@@ -170,7 +170,7 @@ export class GoogleAnalyticsController extends Controller {
     //   });
     // }
 
-    return { ok: true, property_id: propertyId };
+    return { status: 'ok', results: { propertyId } };
   }
 
   // ---- helpers ----

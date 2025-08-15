@@ -4,6 +4,7 @@ import type express from 'express';
 import crypto from 'crypto';
 import { Request } from '@tsoa/runtime'
 import { ApiSuccessEmpty } from '@lightdash/common';
+import { ApiSuccess } from '@lightdash/common/dist/types/types/api/success';
 
 type StartBody = { projectUuid: string; shop_url?: string };
 type StartResp = { startUrl: string };
@@ -31,7 +32,7 @@ export class ConnectorsController extends Controller {
     @Body() body: StartBody,
     @Request() req: express.Request,
     @Request() res: express.Response,
-  ): Promise<ApiSuccessEmpty> {
+  ): Promise<ApiSuccess<any>> {
     const siteUrl = getSiteUrl(req);
     const state = crypto.randomBytes(16).toString('hex'); // no DB; simple
 

@@ -1,5 +1,6 @@
 import {
     ApiErrorPayload,
+    ApiSuccess,
     ApiSuccessEmpty,
     ParameterError,
 } from '@lightdash/common';
@@ -32,32 +33,41 @@ export class ShopifyAuthController extends BaseController {
         @Body() body: { shopUrl: string; userUuid: string },
         @Request() req: express.Request,
         @Request() res: express.Response,
-    ): Promise<ApiSuccessEmpty> {
+    ): Promise<ApiSuccess<any> | ApiErrorPayload> {
         try {
             const { shopUrl, userUuid } = body;
             if (!shopUrl || !userUuid) {
                 throw new ParameterError('Missing shopUrl or userUuid');
             }
 
+            const connectionService = req.services.getConnectionsService();
+
+            // NOTE: Could get connection by shopUrl and userUuid
+            const existingConnections = await connectionService.getConnectionsByUserUuid(userUuid);
+            // get connection where type is shopify
+            const existingShopifyConnection = existingConnections.find(
+                (conn) => conn.type === 'shopify',
+            );
+
             const shopService = req.services.getShopService();
             const userService = req.services.getUserService();
 
             const user = await userService.getSessionByUserUuid(userUuid);
-            const shop = await shopService.getByShopUrl(shopUrl);
             console.log(`Setting up user ${userUuid} for shop ${shopUrl}`);
             console.log(`Found user: ${JSON.stringify(user)}`);
 
 
-            if (!shop) {
-                throw new ParameterError(`No shop found for URL: ${shopUrl}`);
+            if (!existingShopifyConnection) {
+                console.log(`No existing Shopify connection found for user ${userUuid}. Creating new connection.`);
+                return { status: 'error', error: { statusCode: 403, name: 'an error', message: 'No existing Shopify connection found for user.' } };
             }
-            console.log(`Found shop: ${JSON.stringify(shop)}`);
-            await shopService.setupUserForShop(shop, user);
+
+            await shopService.setupUserForShop(existingShopifyConnection, user);
             console.log(`User ${userUuid} setup for shop ${shopUrl}`);
             runDataIngestion({
                 airbyteSource: 'source-shopify',
                 shopUrl,
-                accessToken: shop.access_token,
+                accessToken: existingShopifyConnection.access_token,
                 userId: user.userId
 
             });
@@ -89,7 +99,7 @@ export class ShopifyAuthController extends BaseController {
 
             const shop = await shopService.getByShopUrl(shopUrl);
             const user = req.user;
-            
+
             console.log(`Found shop: ${JSON.stringify(shop)}`);
 
             if (!shop) {

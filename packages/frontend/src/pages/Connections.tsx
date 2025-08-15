@@ -34,10 +34,9 @@ const Connections: FC = () => {
 
     const handleClick = (type: string, config: any) => {
         // if (!connections) return;
-        console.log('Selected connection:', connections);
         console.log('config:', config);
         console.log('type:', type);
-        if(connections)    setSelectedConnection(connections.find(conn => conn.type === type) || null);
+        if (connections) setSelectedConnection(connections.find(conn => conn.type === type) || null);
         setSelectedConfig(config);
         open();
     };
@@ -46,7 +45,6 @@ const Connections: FC = () => {
         console.log('Connecting with config:', config);
         try {
             const payload = {
-                projectUuid,
                 shop_url: shopUrl || undefined,
                 returnPath: '/connections',
             };
