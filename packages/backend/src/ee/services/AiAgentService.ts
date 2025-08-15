@@ -5,8 +5,6 @@ import {
     AiAgentThread,
     AiAgentThreadSummary,
     AiAgentUserPreferences,
-    AiConversation,
-    AiConversationMessage,
     AiDuplicateSlackPromptError,
     AiMetricQueryWithFilters,
     AiResultType,
@@ -21,21 +19,17 @@ import {
     ApiUpdateAiAgent,
     ApiUpdateUserAgentPreferences,
     assertUnreachable,
+    CatalogFilter,
     CatalogType,
     CommercialFeatureFlags,
-    Explore,
     filterExploreByTags,
-    findFieldInExplores,
     ForbiddenError,
-    getItemId,
-    isExploreError,
     isSlackPrompt,
     LightdashUser,
     NotFoundError,
     parseVizConfig,
     QueryExecutionContext,
     SlackPrompt,
-    UnexpectedServerError,
     UpdateSlackResponse,
     UpdateWebAppResponse,
     type SessionUser,
@@ -49,7 +43,7 @@ import {
     ToolCallPart,
     ToolResultPart,
 } from 'ai';
-import _, { pick } from 'lodash';
+import _ from 'lodash';
 import slackifyMarkdown from 'slackify-markdown';
 import {
     AiAgentCreatedEvent,
@@ -66,16 +60,24 @@ import { LightdashConfig } from '../../config/parseConfig';
 import Logger from '../../logging/logger';
 import { CatalogSearchContext } from '../../models/CatalogModel/CatalogModel';
 import { GroupsModel } from '../../models/GroupsModel';
+import { SearchModel } from '../../models/SearchModel';
+import { SpaceModel } from '../../models/SpaceModel';
 import { UserAttributesModel } from '../../models/UserAttributesModel';
 import { UserModel } from '../../models/UserModel';
 import { AsyncQueryService } from '../../services/AsyncQueryService/AsyncQueryService';
 import { CatalogService } from '../../services/CatalogService/CatalogService';
 import { FeatureFlagService } from '../../services/FeatureFlag/FeatureFlagService';
 import { ProjectService } from '../../services/ProjectService/ProjectService';
+import { SpaceService } from '../../services/SpaceService/SpaceService';
+import { wrapSentryTransaction } from '../../utils';
 import { AiAgentModel } from '../models/AiAgentModel';
 import { generateAgentResponse, streamAgentResponse } from './ai/agents/agent';
 import { getModel } from './ai/models';
+import { AiAgentArgs, AiAgentDependencies } from './ai/types/aiAgent';
 import {
+    FindChartsFn,
+    FindDashboardsFn,
+    FindExploresFn,
     FindFieldFn,
     GetExploreFn,
     GetPromptFn,
@@ -85,7 +87,6 @@ import {
     StoreToolResultsFn,
     UpdateProgressFn,
 } from './ai/types/aiAgentDependencies';
-import { AiAgentExploreSummary } from './ai/types/aiAgentExploreSummary';
 import {
     getDeepLinkBlocks,
     getExploreBlocks,
@@ -109,6 +110,8 @@ type AiAgentServiceDependencies = {
     asyncQueryService: AsyncQueryService;
     userAttributesModel: UserAttributesModel;
     catalogService: CatalogService;
+    searchModel: SearchModel;
+    spaceService: SpaceService;
 };
 
 export class AiAgentService {
@@ -134,6 +137,10 @@ export class AiAgentService {
 
     private readonly userAttributesModel: UserAttributesModel;
 
+    private readonly searchModel: SearchModel;
+
+    private readonly spaceService: SpaceService;
+
     constructor(dependencies: AiAgentServiceDependencies) {
         this.lightdashConfig = dependencies.lightdashConfig;
         this.analytics = dependencies.analytics;
@@ -146,6 +153,8 @@ export class AiAgentService {
         this.asyncQueryService = dependencies.asyncQueryService;
         this.userAttributesModel = dependencies.userAttributesModel;
         this.catalogService = dependencies.catalogService;
+        this.searchModel = dependencies.searchModel;
+        this.spaceService = dependencies.spaceService;
     }
 
     private async getIsCopilotEnabled(
@@ -159,11 +168,12 @@ export class AiAgentService {
     }
 
     /**
-     * Checks if a user has group access to an AI agent
+     * Checks if a user has access to an AI agent
      * Returns true if:
      * 1. The user can manage the AiAgent (admin access)
-     * 2. The agent has no group access defined (open access - users that can view AiAgent)
+     * 2. The agent has no group or user access defined (open access - users that can view AiAgent)
      * 3. The user is a member of at least one of the agent's groups
+     * 4. The user is in the agent's user access list
      */
     private async checkAgentAccess(
         user: SessionUser,
@@ -181,18 +191,35 @@ export class AiAgentService {
             return true;
         }
 
-        if (!agent.groupAccess || agent.groupAccess.length === 0) {
+        // Check if open access (no restrictions)
+        const hasGroupAccess =
+            agent.groupAccess && agent.groupAccess.length > 0;
+        const hasUserAccess = agent.userAccess && agent.userAccess.length > 0;
+
+        if (!hasGroupAccess && !hasUserAccess) {
             return true;
         }
 
-        const groupUuids = agent.groupAccess;
-        const userGroups = await this.groupsModel.findUserInGroups({
-            userUuid: user.userUuid,
-            organizationUuid: agent.organizationUuid,
-            groupUuids,
-        });
+        // Check user access first (direct access)
+        if (hasUserAccess && agent.userAccess.includes(user.userUuid)) {
+            return true;
+        }
 
-        return userGroups.length > 0;
+        // Check group access
+        if (hasGroupAccess) {
+            const groupUuids = agent.groupAccess;
+            const userGroups = await this.groupsModel.findUserInGroups({
+                userUuid: user.userUuid,
+                organizationUuid: agent.organizationUuid,
+                groupUuids,
+            });
+
+            if (userGroups.length > 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -231,7 +258,6 @@ export class AiAgentService {
         return false;
     }
 
-    // from AiService getToolUtilities
     private async getExplore(
         account: Account,
         projectUuid: string,
@@ -256,7 +282,6 @@ export class AiAgentService {
         return filteredExplore;
     }
 
-    // from AiService getToolUtilities
     private async runAiMetricQuery(
         user: SessionUser,
         projectUuid: string,
@@ -451,7 +476,7 @@ export class AiAgentService {
         const slackUserIds = _.uniq(
             threads
                 .filter((thread) => thread.createdFrom === 'slack')
-                .filter((thread) => thread.user.slackUserId != null)
+                .filter((thread) => thread.user.slackUserId !== null)
                 .map((thread) => thread.user.slackUserId),
         );
 
@@ -468,7 +493,7 @@ export class AiAgentService {
 
             const slackUser = slackUsers.find(
                 ({ id }) =>
-                    thread.user.slackUserId != null &&
+                    thread.user.slackUserId !== null &&
                     id === thread.user.slackUserId,
             );
 
@@ -745,6 +770,7 @@ export class AiAgentService {
             integrations: body.integrations,
             instruction: body.instruction,
             groupAccess: body.groupAccess,
+            userAccess: body.userAccess,
         });
 
         this.analytics.track<AiAgentCreatedEvent>({
@@ -799,6 +825,7 @@ export class AiAgentService {
             instruction: body.instruction,
             imageUrl: body.imageUrl,
             groupAccess: body.groupAccess,
+            userAccess: body.userAccess,
         });
 
         this.analytics.track<AiAgentUpdatedEvent>({
@@ -1023,7 +1050,7 @@ export class AiAgentService {
 
         const parsedVizConfig = parseVizConfig(
             message.vizConfigOutput,
-            this.lightdashConfig.query.maxLimit,
+            this.lightdashConfig.ai.copilot.maxQueryLimit,
         );
 
         if (!parsedVizConfig) {
@@ -1048,21 +1075,21 @@ export class AiAgentService {
                     runMetricQuery: (q) =>
                         this.runAiMetricQuery(user, projectUuid, q),
                     vizTool: parsedVizConfig.vizTool,
-                    maxLimit: this.lightdashConfig.query.maxLimit,
+                    maxLimit: this.lightdashConfig.ai.copilot.maxQueryLimit,
                 });
             case AiResultType.TIME_SERIES_RESULT:
                 return renderTimeSeriesViz({
                     runMetricQuery: (q) =>
                         this.runAiMetricQuery(user, projectUuid, q),
                     vizTool: parsedVizConfig.vizTool,
-                    maxLimit: this.lightdashConfig.query.maxLimit,
+                    maxLimit: this.lightdashConfig.ai.copilot.maxQueryLimit,
                 });
             case AiResultType.TABLE_RESULT:
                 return renderTableViz({
                     runMetricQuery: (q) =>
                         this.runAiMetricQuery(user, projectUuid, q),
                     vizTool: parsedVizConfig.vizTool,
-                    maxLimit: this.lightdashConfig.query.maxLimit,
+                    maxLimit: this.lightdashConfig.ai.copilot.maxQueryLimit,
                 });
             default:
                 return assertUnreachable(parsedVizConfig, 'Invalid viz type');
@@ -1143,7 +1170,7 @@ export class AiAgentService {
 
         const parsedVizConfig = parseVizConfig(
             message.vizConfigOutput,
-            this.lightdashConfig.query.maxLimit,
+            this.lightdashConfig.ai.copilot.maxQueryLimit,
         );
 
         if (!parsedVizConfig) {
@@ -1280,56 +1307,6 @@ export class AiAgentService {
         });
     }
 
-    private async getMinimalExploreInformation(
-        user: SessionUser,
-        projectUuid: string,
-        availableTags: string[] | null,
-    ): Promise<AiAgentExploreSummary[]> {
-        const exploreSummaries =
-            await this.projectService.getAllExploresSummary(
-                user,
-                projectUuid,
-                true,
-                false,
-            );
-
-        const account = fromSession(user);
-        const explores = await this.projectService.findExplores({
-            account,
-            projectUuid,
-            exploreNames: exploreSummaries.map((s) => s.name),
-        });
-
-        const exploresWithoutErrors = Object.values(explores).filter(
-            (e): e is Explore => !isExploreError(e),
-        );
-
-        const exploresWithDescriptions = exploresWithoutErrors
-            .map((explore) =>
-                filterExploreByTags({
-                    explore,
-                    availableTags,
-                }),
-            )
-            .filter((explore) => explore !== undefined)
-            .map((explore, index) => ({
-                ...explore,
-                description: exploreSummaries[index]?.description,
-                aiHint: exploreSummaries[index]?.aiHint,
-            }));
-
-        const minimalExploreInformation: AiAgentExploreSummary[] =
-            exploresWithDescriptions.map((s) => ({
-                ...pick(s, ['name', 'label', 'description', 'baseTable']),
-                joinedTables: Object.keys(s.tables).filter(
-                    (table) => table !== s.baseTable,
-                ),
-                ...(s.aiHint ? { aiHint: s.aiHint } : {}),
-            }));
-
-        return minimalExploreInformation;
-    }
-
     private async getAgentSettings(
         user: SessionUser,
         prompt: SlackPrompt | AiWebAppPrompt,
@@ -1434,39 +1411,140 @@ export class AiAgentService {
     ) {
         const { projectUuid, organizationUuid } = prompt;
 
-        const getExplores = async () => {
-            const agentSettings = await this.getAgentSettings(user, prompt);
+        const findExplores: FindExploresFn = (args) =>
+            wrapSentryTransaction('AiAgent.findExplores', args, async () => {
+                const agentSettings = await this.getAgentSettings(user, prompt);
 
-            return this.getMinimalExploreInformation(
-                user,
-                projectUuid,
-                agentSettings?.tags ?? null,
-            );
-        };
+                const userAttributes =
+                    await this.userAttributesModel.getAttributeValuesForOrgMember(
+                        {
+                            organizationUuid,
+                            userUuid: user.userUuid,
+                        },
+                    );
+
+                const { data: tables, pagination } =
+                    await this.catalogService.searchCatalog({
+                        projectUuid,
+                        catalogSearch: {
+                            type: CatalogType.Table,
+                            yamlTags: agentSettings.tags ?? undefined,
+                            tables: args.tableName
+                                ? [args.tableName]
+                                : undefined,
+                        },
+                        userAttributes,
+                        context: CatalogSearchContext.AI_AGENT,
+                        paginateArgs: {
+                            page: args.page,
+                            pageSize: args.pageSize,
+                        },
+                        fullTextSearchOperator: 'OR',
+                    });
+
+                const tablesWithFields = await Promise.all(
+                    tables
+                        .filter((table) => table.type === CatalogType.Table)
+                        .map(async (table) => {
+                            if (!args.includeFields) {
+                                return {
+                                    table,
+                                    dimensions: [],
+                                    metrics: [],
+                                    dimensionsPagination: undefined,
+                                    metricsPagination: undefined,
+                                };
+                            }
+
+                            if (
+                                !args.fieldSearchSize ||
+                                !args.fieldOverviewSearchSize
+                            ) {
+                                throw new Error(
+                                    'fieldSearchSize and fieldOverviewSearchSize are required when includeFields is true',
+                                );
+                            }
+
+                            const sharedArgs = {
+                                projectUuid,
+                                catalogSearch: {
+                                    type: CatalogType.Field,
+                                    yamlTags: agentSettings.tags ?? undefined,
+                                    tables: [table.name],
+                                },
+                                userAttributes,
+                                context: CatalogSearchContext.AI_AGENT,
+                                paginateArgs: {
+                                    page: 1,
+                                    pageSize: args.tableName
+                                        ? args.fieldSearchSize
+                                        : args.fieldOverviewSearchSize,
+                                },
+                                sortArgs: {
+                                    sort: 'chartUsage',
+                                    order: 'desc' as const,
+                                },
+                            };
+
+                            const {
+                                data: dimensions,
+                                pagination: dimensionsPagination,
+                            } = await this.catalogService.searchCatalog({
+                                ...sharedArgs,
+                                catalogSearch: {
+                                    ...sharedArgs.catalogSearch,
+                                    filter: CatalogFilter.Dimensions,
+                                },
+                                fullTextSearchOperator: 'OR',
+                            });
+
+                            const {
+                                data: metrics,
+                                pagination: metricsPagination,
+                            } = await this.catalogService.searchCatalog({
+                                ...sharedArgs,
+                                catalogSearch: {
+                                    ...sharedArgs.catalogSearch,
+                                    filter: CatalogFilter.Metrics,
+                                },
+                                fullTextSearchOperator: 'OR',
+                            });
+
+                            return {
+                                table,
+                                dimensions: dimensions.filter(
+                                    (d) => d.type === CatalogType.Field,
+                                ),
+                                metrics: metrics.filter(
+                                    (m) => m.type === CatalogType.Field,
+                                ),
+                                dimensionsPagination,
+                                metricsPagination,
+                            };
+                        }),
+                );
+
+                return {
+                    tablesWithFields,
+                    pagination,
+                };
+            });
 
         const getExplore: GetExploreFn = async ({ exploreName }) => {
             const agentSettings = await this.getAgentSettings(user, prompt);
 
             const account = fromSession(user);
-            const explore = await this.projectService.getExplore(
+            const explore = await this.getExplore(
                 account,
                 projectUuid,
+                agentSettings.tags,
                 exploreName,
             );
 
-            const filteredExplore = filterExploreByTags({
-                explore,
-                availableTags: agentSettings?.tags ?? null,
-            });
-
-            if (!filteredExplore) {
-                throw new NotFoundError('Explore not found');
-            }
-
-            return filteredExplore;
+            return explore;
         };
 
-        const findFields: FindFieldFn = async ({ fieldSearchQuery }) => {
+        const findFields: FindFieldFn = async (args) => {
             const userAttributes =
                 await this.userAttributesModel.getAttributeValuesForOrgMember({
                     organizationUuid,
@@ -1475,53 +1553,29 @@ export class AiAgentService {
 
             const agentSettings = await this.getAgentSettings(user, prompt);
 
-            const catalogItems = await this.catalogService.searchCatalog({
-                projectUuid,
-                catalogSearch: {
-                    type: CatalogType.Field,
-                    searchQuery: fieldSearchQuery.name,
-                },
-                context: CatalogSearchContext.AI_AGENT,
-                // TODO: make this paginated
-                paginateArgs: {
-                    page: 1,
-                    pageSize: 5,
-                },
-                userAttributes,
-                yamlTags: agentSettings.tags,
-            });
+            const { data: catalogItems, pagination } =
+                await this.catalogService.searchCatalog({
+                    projectUuid,
+                    catalogSearch: {
+                        type: CatalogType.Field,
+                        searchQuery: args.fieldSearchQuery.label,
+                        yamlTags: agentSettings.tags ?? undefined,
+                    },
+                    context: CatalogSearchContext.AI_AGENT,
+                    paginateArgs: {
+                        page: args.page,
+                        pageSize: args.pageSize,
+                    },
+                    userAttributes,
+                    fullTextSearchOperator: 'OR',
+                });
 
-            // TODO: we should not filter here, we should return all the fields
-            const catalogFields = catalogItems.data.filter(
+            // TODO: we should not filter here, search should be returning a proper type
+            const catalogFields = catalogItems.filter(
                 (item) => item.type === CatalogType.Field,
             );
 
-            const explores = await this.projectService.findExplores({
-                account: fromSession(user),
-                projectUuid,
-                exploreNames: catalogFields.map((s) => s.tableName),
-            });
-
-            const filteredExplores = Object.values(explores).filter(
-                (e): e is Explore => !isExploreError(e),
-            );
-
-            const fields = catalogFields.map((catalogField) => {
-                const exploreField = findFieldInExplores(
-                    filteredExplores,
-                    catalogField.tableName,
-                    catalogField.name,
-                );
-                if (!exploreField)
-                    throw new UnexpectedServerError('Field not found');
-
-                return {
-                    catalogField,
-                    exploreField,
-                };
-            });
-
-            return fields;
+            return { fields: catalogFields, pagination };
         };
 
         const updateProgress: UpdateProgressFn = (progress) =>
@@ -1600,9 +1654,64 @@ export class AiAgentService {
             await this.aiAgentModel.createToolResults(data);
         };
 
+        const findDashboards: FindDashboardsFn = async (args) => {
+            const searchResults = await this.searchModel.searchDashboards(
+                projectUuid,
+                args.dashboardSearchQuery.label,
+                undefined,
+                'OR',
+            );
+
+            const filteredResults = await this.spaceService.filterBySpaceAccess(
+                user,
+                searchResults,
+            );
+
+            const totalResults = filteredResults.length;
+            const totalPageCount = Math.ceil(totalResults / args.pageSize);
+
+            return {
+                dashboards: filteredResults,
+                pagination: {
+                    page: args.page,
+                    pageSize: args.pageSize,
+                    totalPageCount,
+                    totalResults,
+                },
+            };
+        };
+
+        const findCharts: FindChartsFn = async (args) => {
+            const allCharts = await this.searchModel.searchAllCharts(
+                projectUuid,
+                args.chartSearchQuery.label,
+                'OR',
+            );
+
+            const filteredResults = await this.spaceService.filterBySpaceAccess(
+                user,
+                allCharts,
+            );
+
+            const totalResults = filteredResults.length;
+            const totalPageCount = Math.ceil(totalResults / args.pageSize);
+
+            return {
+                charts: filteredResults,
+                pagination: {
+                    page: args.page,
+                    pageSize: args.pageSize,
+                    totalPageCount,
+                    totalResults,
+                },
+            };
+        };
+
         return {
+            findCharts,
+            findDashboards,
             findFields,
-            getExplores,
+            findExplores,
             getExplore,
             updateProgress,
             getPrompt,
@@ -1665,8 +1774,10 @@ export class AiAgentService {
         const { prompt, stream } = options;
 
         const {
+            findCharts,
+            findDashboards,
             findFields,
-            getExplores,
+            findExplores,
             getExplore,
             updateProgress,
             getPrompt,
@@ -1676,34 +1787,50 @@ export class AiAgentService {
             storeToolResults,
         } = this.getAiAgentDependencies(user, prompt);
 
-        const model = getModel(this.lightdashConfig.ai.copilot);
+        const { model, callOptions } = getModel(
+            this.lightdashConfig.ai.copilot,
+        );
         const agentSettings = await this.getAgentSettings(user, prompt);
 
-        const args = {
-            model,
-            agentSettings,
-            threadUuid: prompt.threadUuid,
-            promptUuid: prompt.promptUuid,
-            messageHistory,
-            maxLimit: this.lightdashConfig.query.maxLimit,
+        const args: AiAgentArgs = {
             organizationId: user.organizationUuid,
             userId: user.userUuid,
+
+            threadUuid: prompt.threadUuid,
+            promptUuid: prompt.promptUuid,
+
+            agentSettings,
+            model,
+            callOptions,
+            messageHistory,
+
             debugLoggingEnabled:
                 this.lightdashConfig.ai.copilot.debugLoggingEnabled,
-            __experimental__toolFindFields:
-                this.lightdashConfig.ai.copilot.__experimental__toolFindFields,
+            telemetryEnabled: this.lightdashConfig.ai.copilot.telemetryEnabled,
+
+            availableExploresPageSize: 100,
+            findExploresPageSize: 15,
+            findExploresFieldSearchSize: 200,
+            findExploresFieldOverviewSearchSize: 5,
+            findExploresMaxDescriptionLength: 100,
+            findFieldsPageSize: 10,
+            findDashboardsPageSize: 5,
+            findChartsPageSize: 5,
+            maxQueryLimit: this.lightdashConfig.ai.copilot.maxQueryLimit,
+            siteUrl: this.lightdashConfig.siteUrl,
         };
 
-        const dependencies = {
+        const dependencies: AiAgentDependencies = {
+            findCharts,
+            findDashboards,
             findFields,
-            getExplores,
+            findExplores,
             getExplore,
             runMiniMetricQuery,
             getPrompt,
             sendFile,
             storeToolCall,
             storeToolResults,
-            // avoid binding
             updateProgress: (progress: string) => updateProgress(progress),
             updatePrompt: (
                 update: UpdateSlackResponse | UpdateWebAppResponse,
@@ -1713,26 +1840,22 @@ export class AiAgentService {
         };
 
         return stream
-            ? streamAgentResponse({
-                  args,
-                  dependencies,
-              })
-            : generateAgentResponse({
-                  args,
-                  dependencies,
-              });
+            ? streamAgentResponse({ args, dependencies })
+            : generateAgentResponse({ args, dependencies });
     }
 
     // TODO: user permissions
     async updateHumanScoreForSlackPrompt(
+        userId: string,
+        organizationUuid: string | undefined,
         promptUuid: string,
         humanScore: number,
     ) {
         this.analytics.track<AiAgentPromptFeedbackEvent>({
             event: 'ai_agent_prompt.feedback',
-            userId: undefined,
+            userId,
             properties: {
-                organizationId: undefined,
+                organizationId: organizationUuid ?? '',
                 humanScore,
                 messageId: promptUuid,
                 context: 'slack',
@@ -1923,10 +2046,9 @@ export class AiAgentService {
             throw new Error('Thread not found');
         }
 
-        let name: string | undefined;
+        let agent: AiAgent | undefined;
         if (thread.agentUuid) {
-            const agent = await this.getAgent(user, thread.agentUuid);
-            name = agent.name;
+            agent = await this.getAgent(user, thread.agentUuid);
         }
 
         let response: string | undefined;
@@ -1948,7 +2070,7 @@ export class AiAgentService {
                 text: `🔴 Co-pilot failed to generate a response 😥 Please try again.`,
                 channel: slackPrompt.slackChannelId,
                 thread_ts: slackPrompt.slackThreadTs,
-                username: name,
+                username: agent?.name,
             });
 
             Logger.error('Failed to generate response:', e);
@@ -1977,12 +2099,15 @@ export class AiAgentService {
         const exploreBlocks = getExploreBlocks(
             slackPrompt,
             this.lightdashConfig.siteUrl,
-            this.lightdashConfig.query.maxLimit,
+            this.lightdashConfig.ai.copilot.maxQueryLimit,
         );
-        const historyBlocks = getDeepLinkBlocks(
-            slackPrompt,
-            this.lightdashConfig.siteUrl,
-        );
+        const historyBlocks = agent
+            ? getDeepLinkBlocks(
+                  agent.uuid,
+                  slackPrompt,
+                  this.lightdashConfig.siteUrl,
+              )
+            : undefined;
 
         // ! This is needed because the markdownToBlocks escapes all characters and slack just needs &, <, > to be escaped
         // ! https://api.slack.com/reference/surfaces/formatting#escaping
@@ -1991,7 +2116,7 @@ export class AiAgentService {
         const newResponse = await this.slackClient.postMessage({
             organizationUuid: slackPrompt.organizationUuid,
             text: slackifiedMarkdown,
-            username: name,
+            username: agent?.name,
             channel: slackPrompt.slackChannelId,
             thread_ts: slackPrompt.slackThreadTs,
             unfurl_links: false,
@@ -2006,7 +2131,7 @@ export class AiAgentService {
                 ...exploreBlocks,
                 ...followUpToolBlocks,
                 ...feedbackBlocks,
-                ...historyBlocks,
+                ...(historyBlocks || []),
             ],
         });
 
@@ -2023,85 +2148,6 @@ export class AiAgentService {
         }
     }
 
-    // TODO: This is to get conversations for the "old" page - remove
-    async getConversations(
-        user: SessionUser,
-        projectUuid: string,
-    ): Promise<AiConversation[]> {
-        if (!(await this.getIsCopilotEnabled(user))) {
-            throw new Error('AI Copilot is not enabled');
-        }
-
-        if (!user.organizationUuid) {
-            throw new Error('Organization not found');
-        }
-
-        const threads = await this.aiAgentModel.getThreads(
-            user.organizationUuid,
-            projectUuid,
-        );
-
-        return threads.map((thread) => ({
-            threadUuid: thread.ai_thread_uuid,
-            createdAt: thread.created_at,
-            createdFrom: thread.created_from,
-            firstMessage: thread.prompt,
-            user: {
-                uuid: thread.user_uuid,
-                name: thread.user_name,
-            },
-        }));
-    }
-
-    // TODO: this is to get messages for the "old" page - remove
-    async getConversationMessages(
-        user: SessionUser,
-        projectUuid: string,
-        aiThreadUuid: string,
-    ): Promise<AiConversationMessage[]> {
-        if (!(await this.getIsCopilotEnabled(user))) {
-            throw new Error('AI Copilot is not enabled');
-        }
-
-        const { organizationUuid } = user;
-
-        if (!organizationUuid) {
-            throw new Error('Organization not found');
-        }
-
-        const canViewProject = user.ability.can(
-            'view',
-            subject('Project', {
-                organizationUuid,
-                projectUuid,
-            }),
-        );
-
-        if (!canViewProject) {
-            throw new Error('User does not have access to the project!');
-        }
-
-        const messages = await this.aiAgentModel.getThreadMessages(
-            organizationUuid,
-            projectUuid,
-            aiThreadUuid,
-        );
-
-        return messages.map((message) => ({
-            promptUuid: message.ai_prompt_uuid,
-            message: message.prompt,
-            createdAt: message.created_at,
-            response: message.response ?? undefined,
-            respondedAt: message.responded_at ?? undefined,
-            vizConfigOutput: message.viz_config_output ?? undefined,
-            humanScore: message.human_score ?? undefined,
-            user: {
-                uuid: message.user_uuid,
-                name: message.user_name,
-            },
-        }));
-    }
-
     async getUserAgentPreferences(
         user: SessionUser,
         projectUuid: string,
@@ -2116,7 +2162,10 @@ export class AiAgentService {
             throw new ForbiddenError(`Copilot not enabled`);
         }
 
-        const project = await this.projectService.getProject(projectUuid, user);
+        const project = await this.projectService.getProject(
+            projectUuid,
+            fromSession(user),
+        );
         if (project.organizationUuid !== organizationUuid) {
             throw new ForbiddenError(
                 'Project does not belong to this organization',
@@ -2144,7 +2193,10 @@ export class AiAgentService {
             throw new ForbiddenError('Copilot is not enabled');
         }
 
-        const project = await this.projectService.getProject(projectUuid, user);
+        const project = await this.projectService.getProject(
+            projectUuid,
+            fromSession(user),
+        );
         if (project.organizationUuid !== organizationUuid) {
             throw new ForbiddenError(
                 'Project does not belong to this organization',
@@ -2181,7 +2233,10 @@ export class AiAgentService {
             throw new ForbiddenError('Copilot is not enabled');
         }
 
-        const project = await this.projectService.getProject(projectUuid, user);
+        const project = await this.projectService.getProject(
+            projectUuid,
+            fromSession(user),
+        );
         if (project.organizationUuid !== organizationUuid) {
             throw new ForbiddenError(
                 'Project does not belong to this organization',
@@ -2192,5 +2247,50 @@ export class AiAgentService {
             userUuid,
             projectUuid,
         });
+    }
+
+    public async getAgentExploreAccessSummary(
+        account: Account,
+        projectUuid: string,
+        tags: string[] | null,
+    ) {
+        const exploreSummaries =
+            await this.projectService.getAllExploresSummary(
+                account,
+                projectUuid,
+                true,
+                true,
+            );
+
+        const allExplores = await Promise.all(
+            exploreSummaries.map((explore) =>
+                this.projectService.getExplore(
+                    account,
+                    projectUuid,
+                    explore.name,
+                ),
+            ),
+        );
+
+        const filteredExplores = allExplores
+            .map((explore) =>
+                filterExploreByTags({ availableTags: tags, explore }),
+            )
+            .filter((explore) => explore !== undefined);
+
+        const exploreAccessSummary = filteredExplores.map((explore) => ({
+            exploreName: explore.label,
+            joinedTables: explore.joinedTables.map(
+                (table) => explore.tables[table.table].label,
+            ),
+            dimensions: Object.values(
+                explore.tables[explore.baseTable].dimensions,
+            ).map((dimension) => dimension.label),
+            metrics: Object.values(
+                explore.tables[explore.baseTable].metrics,
+            ).map((metric) => metric.label),
+        }));
+
+        return exploreAccessSummary;
     }
 }

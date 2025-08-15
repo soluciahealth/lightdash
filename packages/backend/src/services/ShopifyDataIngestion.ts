@@ -1,9 +1,23 @@
 import { GoogleAuth } from 'google-auth-library';
 
-export const runShopifyDataIngestion = async (
-    shopUrl: string,
-    tables?: string[],
-): Promise<string> => {
+export const runDataIngestion = async ({
+    shopUrl,
+    tables,
+    accessToken,
+    refreshToken,
+    userId,
+    propertyId,
+    airbyteSource = 'source-shopify',
+}: {
+    airbyteSource: string;
+    shopUrl?: string;
+    tables?: string[];
+    accessToken?: string;
+    refreshToken?: string;
+    userId?: Number;
+    propertyId?: string | null;
+    
+}): Promise<string> => {
     const projectId = process.env.GCP_PROJECT_ID || 'shopifyanalytics-448415';
     const region = process.env.CLOUD_RUN_REGION || 'us-central1';
     const jobName = process.env.CLOUD_RUN_JOB_NAME || 'shopify-ingestion';
@@ -16,7 +30,27 @@ export const runShopifyDataIngestion = async (
     const url = `https://${region}-run.googleapis.com/v2/${jobPath}:run`;
 
     const args = [`--shop_url=${shopUrl}`];
-    if (tables?.length) args.push('--tables', ...tables);
+
+    if (tables?.length) {
+        args.push('--tables', ...tables);
+    }
+
+    if (accessToken) {
+        args.push(`--access_token=${accessToken}`);
+    }
+    if (userId) {
+        args.push(`--user_id=${userId}`);
+    }
+
+    if (propertyId) {
+        args.push(`--property_id=${propertyId}`);
+    }
+    if (airbyteSource) {
+        args.push(`--airbyte_source=${airbyteSource}`);
+    }
+    if (refreshToken) {
+        args.push(`--refresh_token=${refreshToken}`);
+    }
 
     const auth = new GoogleAuth({
         scopes: ['https://www.googleapis.com/auth/cloud-platform'],
@@ -50,7 +84,6 @@ export const runShopifyDataIngestion = async (
         return data.name;
     } catch (err: any) {
         console.error('❌ Unexpected error:', err.message || err);
-
         throw err;
     }
 };

@@ -5,24 +5,6 @@ Backend API controllers built with TSOA that handle HTTP requests and generate O
 <howToUse>
 Controllers are automatically registered by TSOA and accessible at their defined routes. All controllers extend BaseController and use dependency injection:
 
-```typescript
-export class MyController extends BaseController {
-    @Route('/api/v1/my-resource')
-    @Tags('MyResource')
-    @Middlewares([allowApiKeyAuthentication, isAuthenticated])
-    @Get('/{id}')
-    @SuccessResponse('200', 'Success')
-    @Response<ApiErrorPayload>('default', 'Error')
-    async getResource(@Path() id: string): Promise<ApiSuccessEmpty> {
-        const result = await this.services.getMyService().getById(id);
-        return {
-            status: 'ok',
-            results: result,
-        };
-    }
-}
-```
-
 Key patterns:
 
 -   Use `@Middlewares([allowApiKeyAuthentication, isAuthenticated])` for protected endpoints
@@ -32,18 +14,25 @@ Key patterns:
     </howToUse>
 
 <codeExample>
+
 ```typescript
 // Basic CRUD controller
 @Route('/api/v1/projects')
+@Response<ApiErrorPayload>('default', 'Error')
 @Tags('Projects')
 export class ProjectController extends BaseController {
+    /**
+     * Retrieves all charts within a project's spaces
+     * @summary List charts
+     */
     @Middlewares([allowApiKeyAuthentication, isAuthenticated])
+    @SuccessResponse('200', 'Success')
     @Get('/{projectUuid}/charts')
     @OperationId('listCharts')
     async getCharts(
+        @Request() req: express.Request,
         @Path() projectUuid: string,
         @Query() includePrivate?: boolean,
-        @Request() req: express.Request,
     ): Promise<ApiGetCharts> {
         const charts = await this.services
             .getSavedChartService()
@@ -54,6 +43,10 @@ export class ProjectController extends BaseController {
         };
     }
 
+    /**
+     * Creates a new chart in the specified project
+     * @summary Create chart
+     */
     @Middlewares([allowApiKeyAuthentication, isAuthenticated])
     @Post('/{projectUuid}/charts')
     @SuccessResponse('201', 'Created')
@@ -71,10 +64,9 @@ export class ProjectController extends BaseController {
             results: chart,
         };
     }
-
 }
-
 ```
+
 </codeExample>
 
 <importantToKnow>
@@ -84,27 +76,33 @@ export class ProjectController extends BaseController {
 - `unauthorisedInDemo` - Blocks actions in demo mode
 
 **Controller Organization:**
-- V1 controllers: `/api/v1/` routes with existing patterns
-- V2 controllers: `/api/v2/` routes with async/streaming support
-- Authentication logic in `@authentication/` subdirectory
+
+-   V1 controllers: `/api/v1/` routes with existing patterns
+-   V2 controllers: `/api/v2/` routes with async/streaming support
+-   Authentication logic in `@authentication/` subdirectory
 
 **Key Conventions:**
-- All controllers extend `BaseController` for service injection
-- Use TSOA decorators for OpenAPI generation and routing
-- Services accessed via `this.services.get{Service}Service()`
-- Consistent response format: `{status: 'ok', results: T}`
-- User object available as `req.user!` in authenticated endpoints
+
+-   All controllers extend `BaseController` for service injection
+-   Use TSOA decorators for OpenAPI generation and routing
+-   Services accessed via `this.services.get{Service}Service()`
+-   Consistent response format: `{status: 'ok', results: T}`
+-   User object available as `req.user!` in authenticated endpoints
+-   All endpoints must have JSDoc comments with description first, then `@summary` tag (2-3 words)
 
 **V2 Differences:**
-- Focus on async operations and result streaming
-- Cleaner RESTful API design
-- Enhanced error handling patterns
+
+-   Focus on async operations and result streaming
+-   Cleaner RESTful API design
+-   Enhanced error handling patterns
 
 **Critical Business Logic:**
-- Project permissions enforced through service layer
-- Organization membership required for most operations
-- Demo mode restrictions applied via middleware
-- API keys and sessions both supported for authentication
+
+-   Project permissions enforced through service layer
+-   Organization membership required for most operations
+-   Demo mode restrictions applied via middleware
+-   API keys and sessions both supported for authentication
+
 </importantToKnow>
 
 <links>
@@ -114,4 +112,3 @@ export class ProjectController extends BaseController {
 @packages/backend/src/controllers/projectController.ts - Complex resource controller
 @packages/backend/src/controllers/v2/ - V2 API controllers with async patterns
 </links>
-```

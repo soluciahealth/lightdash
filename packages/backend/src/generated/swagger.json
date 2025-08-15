@@ -933,6 +933,9 @@
 			},
 			"CommonEmbedJwtContent": {
 				"properties": {
+					"canViewUnderlyingData": {
+						"type": "boolean"
+					},
 					"canExplore": {
 						"type": "boolean"
 					},
@@ -1144,7 +1147,8 @@
 					"table",
 					"big_number",
 					"funnel",
-					"custom"
+					"custom",
+					"treemap"
 				],
 				"type": "string"
 			},
@@ -1524,6 +1528,42 @@
 				],
 				"type": "object"
 			},
+			"DashboardParameterValue": {
+				"properties": {
+					"value": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							}
+						]
+					},
+					"parameterName": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"value",
+					"parameterName"
+				],
+				"type": "object"
+			},
+			"Record_string.DashboardParameterValue_": {
+				"properties": {},
+				"additionalProperties": {
+					"$ref": "#/components/schemas/DashboardParameterValue"
+				},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
+			},
+			"DashboardParameters": {
+				"$ref": "#/components/schemas/Record_string.DashboardParameterValue_"
+			},
 			"UpdatedByUser": {
 				"properties": {
 					"userUuid": {
@@ -1648,6 +1688,12 @@
 			},
 			"DashboardConfig": {
 				"properties": {
+					"pinnedParameters": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
 					"isDateZoomDisabled": {
 						"type": "boolean"
 					}
@@ -1715,6 +1761,9 @@
 					},
 					"updatedByUser": {
 						"$ref": "#/components/schemas/UpdatedByUser"
+					},
+					"parameters": {
+						"$ref": "#/components/schemas/DashboardParameters"
 					},
 					"filters": {
 						"$ref": "#/components/schemas/DashboardFilters"
@@ -3978,6 +4027,68 @@
 				],
 				"type": "object"
 			},
+			"ChartType.TREEMAP": {
+				"enum": [
+					"treemap"
+				],
+				"type": "string"
+			},
+			"TreemapChart": {
+				"properties": {
+					"endColorThreshold": {
+						"type": "number",
+						"format": "double"
+					},
+					"startColorThreshold": {
+						"type": "number",
+						"format": "double"
+					},
+					"useDynamicColors": {
+						"type": "boolean"
+					},
+					"endColor": {
+						"type": "string"
+					},
+					"startColor": {
+						"type": "string"
+					},
+					"colorMetricId": {
+						"type": "string"
+					},
+					"sizeMetricId": {
+						"type": "string"
+					},
+					"groupFieldIds": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"leafDepth": {
+						"type": "number",
+						"format": "double"
+					},
+					"visibleMin": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"type": "object"
+			},
+			"TreemapChartConfig": {
+				"properties": {
+					"config": {
+						"$ref": "#/components/schemas/TreemapChart"
+					},
+					"type": {
+						"$ref": "#/components/schemas/ChartType.TREEMAP"
+					}
+				},
+				"required": [
+					"type"
+				],
+				"type": "object"
+			},
 			"ChartConfig": {
 				"anyOf": [
 					{
@@ -3997,6 +4108,9 @@
 					},
 					{
 						"$ref": "#/components/schemas/TableChartConfig"
+					},
+					{
+						"$ref": "#/components/schemas/TreemapChartConfig"
 					}
 				]
 			},
@@ -4838,8 +4952,73 @@
 				],
 				"type": "string"
 			},
+			"LightdashProjectParameter": {
+				"properties": {
+					"options_from_dimension": {
+						"properties": {
+							"dimension": {
+								"type": "string"
+							},
+							"model": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"dimension",
+							"model"
+						],
+						"type": "object"
+					},
+					"options": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"allow_custom_values": {
+						"type": "boolean"
+					},
+					"multiple": {
+						"type": "boolean"
+					},
+					"default": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							}
+						]
+					},
+					"description": {
+						"type": "string"
+					},
+					"label": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"label"
+				],
+				"type": "object"
+			},
+			"Record_string.LightdashProjectParameter_": {
+				"properties": {},
+				"additionalProperties": {
+					"$ref": "#/components/schemas/LightdashProjectParameter"
+				},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
+			},
 			"Explore": {
 				"properties": {
+					"parameters": {
+						"$ref": "#/components/schemas/Record_string.LightdashProjectParameter_"
+					},
 					"aiHint": {
 						"anyOf": [
 							{
@@ -5512,7 +5691,7 @@
 			"ItemsMap": {
 				"$ref": "#/components/schemas/Record_string.Field-or-TableCalculation-or-CustomDimension-or-Metric_"
 			},
-			"Pick_AiAgent.uuid-or-name-or-integrations-or-tags-or-projectUuid-or-organizationUuid-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-groupAccess_": {
+			"Pick_AiAgent.uuid-or-name-or-integrations-or-tags-or-projectUuid-or-organizationUuid-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-groupAccess-or-userAccess_": {
 				"properties": {
 					"name": {
 						"type": "string"
@@ -5576,6 +5755,12 @@
 							"type": "string"
 						},
 						"type": "array"
+					},
+					"userAccess": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
 					}
 				},
 				"required": [
@@ -5589,13 +5774,14 @@
 					"updatedAt",
 					"instruction",
 					"imageUrl",
-					"groupAccess"
+					"groupAccess",
+					"userAccess"
 				],
 				"type": "object",
 				"description": "From T, pick a set of properties whose keys are in the union K"
 			},
 			"AiAgentSummary": {
-				"$ref": "#/components/schemas/Pick_AiAgent.uuid-or-name-or-integrations-or-tags-or-projectUuid-or-organizationUuid-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-groupAccess_"
+				"$ref": "#/components/schemas/Pick_AiAgent.uuid-or-name-or-integrations-or-tags-or-projectUuid-or-organizationUuid-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-groupAccess-or-userAccess_"
 			},
 			"ApiAiAgentSummaryResponse": {
 				"properties": {
@@ -5619,7 +5805,53 @@
 				],
 				"type": "object"
 			},
-			"Pick_BaseAiAgent.uuid-or-projectUuid-or-organizationUuid-or-integrations-or-tags-or-name-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-groupAccess_": {
+			"AiAgentUserPreferences": {
+				"properties": {
+					"defaultAgentUuid": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"defaultAgentUuid"
+				],
+				"type": "object"
+			},
+			"ApiSuccess_AiAgentUserPreferences_": {
+				"properties": {
+					"results": {
+						"$ref": "#/components/schemas/AiAgentUserPreferences"
+					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"ok"
+						],
+						"nullable": false
+					}
+				},
+				"required": [
+					"results",
+					"status"
+				],
+				"type": "object"
+			},
+			"ApiGetUserAgentPreferencesResponse": {
+				"anyOf": [
+					{
+						"$ref": "#/components/schemas/ApiSuccess_AiAgentUserPreferences_"
+					},
+					{
+						"$ref": "#/components/schemas/ApiSuccessEmpty"
+					}
+				]
+			},
+			"ApiUpdateUserAgentPreferencesResponse": {
+				"$ref": "#/components/schemas/ApiSuccessEmpty"
+			},
+			"ApiUpdateUserAgentPreferences": {
+				"$ref": "#/components/schemas/AiAgentUserPreferences"
+			},
+			"Pick_BaseAiAgent.uuid-or-projectUuid-or-organizationUuid-or-integrations-or-tags-or-name-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-groupAccess-or-userAccess_": {
 				"properties": {
 					"name": {
 						"type": "string"
@@ -5683,6 +5915,12 @@
 							"type": "string"
 						},
 						"type": "array"
+					},
+					"userAccess": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
 					}
 				},
 				"required": [
@@ -5696,13 +5934,14 @@
 					"updatedAt",
 					"instruction",
 					"imageUrl",
-					"groupAccess"
+					"groupAccess",
+					"userAccess"
 				],
 				"type": "object",
 				"description": "From T, pick a set of properties whose keys are in the union K"
 			},
 			"AiAgent": {
-				"$ref": "#/components/schemas/Pick_BaseAiAgent.uuid-or-projectUuid-or-organizationUuid-or-integrations-or-tags-or-name-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-groupAccess_"
+				"$ref": "#/components/schemas/Pick_BaseAiAgent.uuid-or-projectUuid-or-organizationUuid-or-integrations-or-tags-or-name-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-groupAccess-or-userAccess_"
 			},
 			"ApiAiAgentResponse": {
 				"properties": {
@@ -5742,7 +5981,7 @@
 				],
 				"type": "object"
 			},
-			"Pick_AiAgent.projectUuid-or-integrations-or-tags-or-name-or-instruction-or-imageUrl-or-groupAccess_": {
+			"Pick_AiAgent.projectUuid-or-integrations-or-tags-or-name-or-instruction-or-imageUrl-or-groupAccess-or-userAccess_": {
 				"properties": {
 					"name": {
 						"type": "string"
@@ -5788,6 +6027,12 @@
 						"nullable": true
 					},
 					"groupAccess": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"userAccess": {
 						"items": {
 							"type": "string"
 						},
@@ -5801,15 +6046,16 @@
 					"tags",
 					"instruction",
 					"imageUrl",
-					"groupAccess"
+					"groupAccess",
+					"userAccess"
 				],
 				"type": "object",
 				"description": "From T, pick a set of properties whose keys are in the union K"
 			},
 			"ApiCreateAiAgent": {
-				"$ref": "#/components/schemas/Pick_AiAgent.projectUuid-or-integrations-or-tags-or-name-or-instruction-or-imageUrl-or-groupAccess_"
+				"$ref": "#/components/schemas/Pick_AiAgent.projectUuid-or-integrations-or-tags-or-name-or-instruction-or-imageUrl-or-groupAccess-or-userAccess_"
 			},
-			"Partial_Pick_AiAgent.projectUuid-or-integrations-or-tags-or-name-or-instruction-or-imageUrl-or-groupAccess__": {
+			"Partial_Pick_AiAgent.projectUuid-or-integrations-or-tags-or-name-or-instruction-or-imageUrl-or-groupAccess-or-userAccess__": {
 				"properties": {
 					"name": {
 						"type": "string"
@@ -5859,6 +6105,12 @@
 							"type": "string"
 						},
 						"type": "array"
+					},
+					"userAccess": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
 					}
 				},
 				"type": "object",
@@ -5867,7 +6119,7 @@
 			"ApiUpdateAiAgent": {
 				"allOf": [
 					{
-						"$ref": "#/components/schemas/Partial_Pick_AiAgent.projectUuid-or-integrations-or-tags-or-name-or-instruction-or-imageUrl-or-groupAccess__"
+						"$ref": "#/components/schemas/Partial_Pick_AiAgent.projectUuid-or-integrations-or-tags-or-name-or-instruction-or-imageUrl-or-groupAccess-or-userAccess__"
 					},
 					{
 						"properties": {
@@ -6504,58 +6756,43 @@
 				],
 				"type": "object"
 			},
-			"AiConversation": {
+			"AiAgentExploreAccessSummary": {
 				"properties": {
-					"user": {
-						"properties": {
-							"name": {
-								"type": "string"
-							},
-							"uuid": {
-								"type": "string"
-							}
+					"metrics": {
+						"items": {
+							"type": "string"
 						},
-						"required": [
-							"name",
-							"uuid"
-						],
-						"type": "object"
+						"type": "array"
 					},
-					"firstMessage": {
-						"type": "string"
+					"dimensions": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
 					},
-					"createdFrom": {
-						"type": "string"
+					"joinedTables": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
 					},
-					"createdAt": {
-						"anyOf": [
-							{
-								"type": "string"
-							},
-							{
-								"type": "string",
-								"format": "date-time"
-							}
-						]
-					},
-					"threadUuid": {
+					"exploreName": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"user",
-					"firstMessage",
-					"createdFrom",
-					"createdAt",
-					"threadUuid"
+					"metrics",
+					"dimensions",
+					"joinedTables",
+					"exploreName"
 				],
 				"type": "object"
 			},
-			"ApiAiConversations": {
+			"ApiSuccess_AiAgentExploreAccessSummary-Array_": {
 				"properties": {
 					"results": {
 						"items": {
-							"$ref": "#/components/schemas/AiConversation"
+							"$ref": "#/components/schemas/AiAgentExploreAccessSummary"
 						},
 						"type": "array"
 					},
@@ -6573,110 +6810,201 @@
 				],
 				"type": "object"
 			},
-			"AiConversationMessageIncomplete": {
+			"ApiAiAgentExploreAccessSummaryResponse": {
+				"$ref": "#/components/schemas/ApiSuccess_AiAgentExploreAccessSummary-Array_"
+			},
+			"Role": {
 				"properties": {
-					"user": {
-						"properties": {
-							"name": {
-								"type": "string"
-							},
-							"uuid": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"name",
-							"uuid"
-						],
-						"type": "object"
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
 					},
 					"createdAt": {
-						"anyOf": [
-							{
-								"type": "string"
-							},
-							{
-								"type": "string",
-								"format": "date-time"
-							}
+						"type": "string",
+						"format": "date-time"
+					},
+					"createdBy": {
+						"type": "string",
+						"nullable": true
+					},
+					"ownerType": {
+						"type": "string",
+						"enum": [
+							"user",
+							"system"
 						]
 					},
-					"message": {
+					"organizationUuid": {
 						"type": "string"
 					},
-					"promptUuid": {
+					"description": {
+						"type": "string",
+						"nullable": true
+					},
+					"name": {
+						"type": "string"
+					},
+					"roleUuid": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"user",
+					"updatedAt",
 					"createdAt",
-					"message",
-					"promptUuid"
+					"createdBy",
+					"ownerType",
+					"organizationUuid",
+					"description",
+					"name",
+					"roleUuid"
 				],
 				"type": "object"
 			},
-			"AiConversationComplete": {
+			"RoleWithScopes": {
 				"allOf": [
 					{
-						"$ref": "#/components/schemas/AiConversationMessageIncomplete"
+						"$ref": "#/components/schemas/Role"
 					},
 					{
 						"properties": {
-							"humanScore": {
-								"type": "number",
-								"format": "double"
-							},
-							"metricQuery": {
-								"additionalProperties": true,
-								"type": "object"
-							},
-							"filtersOutput": {
-								"additionalProperties": true,
-								"type": "object"
-							},
-							"vizConfigOutput": {
-								"additionalProperties": true,
-								"type": "object"
-							},
-							"respondedAt": {
-								"anyOf": [
-									{
-										"type": "string"
-									},
-									{
-										"type": "string",
-										"format": "date-time"
-									}
-								]
-							},
-							"response": {
-								"type": "string"
+							"scopes": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
 							}
 						},
 						"required": [
-							"respondedAt",
-							"response"
+							"scopes"
 						],
 						"type": "object"
 					}
 				]
 			},
-			"AiConversationMessage": {
-				"anyOf": [
-					{
-						"$ref": "#/components/schemas/AiConversationMessageIncomplete"
+			"ApiRoleWithScopesResponse": {
+				"properties": {
+					"results": {
+						"$ref": "#/components/schemas/RoleWithScopes"
 					},
-					{
-						"$ref": "#/components/schemas/AiConversationComplete"
+					"status": {
+						"type": "string",
+						"enum": [
+							"ok"
+						],
+						"nullable": false
 					}
-				]
+				},
+				"required": [
+					"results",
+					"status"
+				],
+				"type": "object"
 			},
-			"ApiAiConversationMessages": {
+			"ApiDefaultRoleResponse": {
+				"properties": {
+					"results": {
+						"$ref": "#/components/schemas/Role"
+					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"ok"
+						],
+						"nullable": false
+					}
+				},
+				"required": [
+					"results",
+					"status"
+				],
+				"type": "object"
+			},
+			"UpdateRole": {
+				"properties": {
+					"description": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"ApiDeleteRoleResponse": {
+				"$ref": "#/components/schemas/ApiSuccessEmpty"
+			},
+			"ApiUnassignRoleFromUserResponse": {
+				"$ref": "#/components/schemas/ApiSuccessEmpty"
+			},
+			"AddScopesToRole": {
+				"properties": {
+					"scopeNames": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"scopeNames"
+				],
+				"type": "object"
+			},
+			"ApiRemoveScopeFromRoleResponse": {
+				"$ref": "#/components/schemas/ApiSuccessEmpty"
+			},
+			"RoleAssignment": {
+				"properties": {
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"projectId": {
+						"type": "string"
+					},
+					"organizationId": {
+						"type": "string"
+					},
+					"assigneeName": {
+						"type": "string"
+					},
+					"assigneeId": {
+						"type": "string"
+					},
+					"assigneeType": {
+						"type": "string",
+						"enum": [
+							"user",
+							"group"
+						]
+					},
+					"roleName": {
+						"type": "string"
+					},
+					"roleId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"assigneeName",
+					"assigneeId",
+					"assigneeType",
+					"roleName",
+					"roleId"
+				],
+				"type": "object"
+			},
+			"ApiRoleAssignmentListResponse": {
 				"properties": {
 					"results": {
 						"items": {
-							"$ref": "#/components/schemas/AiConversationMessage"
+							"$ref": "#/components/schemas/RoleAssignment"
 						},
 						"type": "array"
 					},
@@ -6694,21 +7022,10 @@
 				],
 				"type": "object"
 			},
-			"AiAgentUserPreferences": {
-				"properties": {
-					"defaultAgentUuid": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"defaultAgentUuid"
-				],
-				"type": "object"
-			},
-			"ApiSuccess_AiAgentUserPreferences_": {
+			"ApiRoleAssignmentResponse": {
 				"properties": {
 					"results": {
-						"$ref": "#/components/schemas/AiAgentUserPreferences"
+						"$ref": "#/components/schemas/RoleAssignment"
 					},
 					"status": {
 						"type": "string",
@@ -6724,21 +7041,74 @@
 				],
 				"type": "object"
 			},
-			"ApiGetUserAgentPreferencesResponse": {
-				"anyOf": [
-					{
-						"$ref": "#/components/schemas/ApiSuccess_AiAgentUserPreferences_"
-					},
-					{
-						"$ref": "#/components/schemas/ApiSuccessEmpty"
+			"CreateUserRoleAssignmentRequest": {
+				"properties": {
+					"roleId": {
+						"type": "string"
 					}
-				]
+				},
+				"required": [
+					"roleId"
+				],
+				"type": "object"
 			},
-			"ApiUpdateUserAgentPreferencesResponse": {
-				"$ref": "#/components/schemas/ApiSuccessEmpty"
+			"CreateGroupRoleAssignmentRequest": {
+				"properties": {
+					"roleId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"roleId"
+				],
+				"type": "object"
 			},
-			"ApiUpdateUserAgentPreferences": {
-				"$ref": "#/components/schemas/AiAgentUserPreferences"
+			"UpdateRoleAssignmentRequest": {
+				"properties": {
+					"roleId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"roleId"
+				],
+				"type": "object"
+			},
+			"ApiGetRolesResponse": {
+				"properties": {
+					"results": {
+						"items": {
+							"$ref": "#/components/schemas/Role"
+						},
+						"type": "array"
+					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"ok"
+						],
+						"nullable": false
+					}
+				},
+				"required": [
+					"results",
+					"status"
+				],
+				"type": "object"
+			},
+			"CreateRole": {
+				"properties": {
+					"description": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"name"
+				],
+				"type": "object"
 			},
 			"ApiJobScheduledResponse": {
 				"properties": {
@@ -7903,6 +8273,51 @@
 				],
 				"type": "object"
 			},
+			"url.URL": {
+				"type": "string",
+				"description": "The URL interface represents an object providing static methods used for creating object URLs.\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/API/URL)\n`URL` class is a global reference for `import { URL } from 'url'`\nhttps://nodejs.org/api/url.html#the-whatwg-url-api"
+			},
+			"OauthAuth": {
+				"properties": {
+					"resource": {
+						"$ref": "#/components/schemas/url.URL"
+					},
+					"expiresAt": {
+						"type": "number",
+						"format": "double"
+					},
+					"scopes": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"clientId": {
+						"type": "string"
+					},
+					"token": {
+						"type": "string"
+					},
+					"source": {
+						"type": "string"
+					},
+					"type": {
+						"type": "string",
+						"enum": [
+							"oauth"
+						],
+						"nullable": false
+					}
+				},
+				"required": [
+					"scopes",
+					"clientId",
+					"token",
+					"source",
+					"type"
+				],
+				"type": "object"
+			},
 			"Pick_Account.Exclude_keyofAccount.user-or-keyofAccountHelpers__": {
 				"properties": {
 					"organization": {
@@ -7921,6 +8336,9 @@
 							},
 							{
 								"$ref": "#/components/schemas/PersonalAccessTokenAuth"
+							},
+							{
+								"$ref": "#/components/schemas/OauthAuth"
 							}
 						]
 					}
@@ -8632,13 +9050,16 @@
 				],
 				"type": "object"
 			},
-			"ApiSqlRunnerPivotQueryPayload": {
+			"SortBy": {
+				"items": {
+					"$ref": "#/components/schemas/VizSortBy"
+				},
+				"type": "array"
+			},
+			"PivotConfiguration": {
 				"properties": {
 					"sortBy": {
-						"items": {
-							"$ref": "#/components/schemas/VizSortBy"
-						},
-						"type": "array"
+						"$ref": "#/components/schemas/SortBy"
 					},
 					"groupByColumns": {
 						"items": {
@@ -8653,17 +9074,38 @@
 						"type": "array"
 					},
 					"indexColumn": {
-						"$ref": "#/components/schemas/PivotIndexColum"
-					},
-					"savedSqlUuid": {
-						"type": "string"
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/PivotIndexColum"
+							},
+							{
+								"items": {
+									"$ref": "#/components/schemas/PivotIndexColum"
+								},
+								"type": "array"
+							}
+						]
 					}
 				},
 				"required": [
-					"valuesColumns",
-					"indexColumn"
+					"valuesColumns"
 				],
 				"type": "object"
+			},
+			"ApiSqlRunnerPivotQueryPayload": {
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/PivotConfiguration"
+					},
+					{
+						"properties": {
+							"savedSqlUuid": {
+								"type": "string"
+							}
+						},
+						"type": "object"
+					}
+				]
 			},
 			"SqlRunnerPivotQueryBody": {
 				"allOf": [
@@ -9051,11 +9493,11 @@
 					"uuid": {
 						"type": "string"
 					},
-					"isPrivate": {
-						"type": "boolean"
-					},
 					"userAccess": {
 						"$ref": "#/components/schemas/SpaceShare"
+					},
+					"isPrivate": {
+						"type": "boolean"
 					}
 				},
 				"required": [
@@ -9730,6 +10172,7 @@
 					"big_number",
 					"pie",
 					"funnel",
+					"treemap",
 					"custom"
 				],
 				"type": "string"
@@ -10758,6 +11201,9 @@
 								"type": "number",
 								"format": "double"
 							},
+							"parameters": {
+								"$ref": "#/components/schemas/ParametersValuesMap"
+							},
 							"filters": {
 								"items": {
 									"$ref": "#/components/schemas/SchedulerFilterRule"
@@ -10932,8 +11378,7 @@
 					"indexCatalog",
 					"generateDailyJobs",
 					"exportCsvDashboard",
-					"renameResources",
-					"runAsyncWarehouseQuery"
+					"renameResources"
 				]
 			},
 			"SchedulerJobStatus": {
@@ -11791,6 +12236,9 @@
 							}
 						],
 						"nullable": true
+					},
+					"parameters": {
+						"$ref": "#/components/schemas/DashboardParameters"
 					},
 					"dashboardVersionId": {
 						"type": "number",
@@ -13357,6 +13805,9 @@
 			},
 			"CalculateTotalFromQuery": {
 				"properties": {
+					"parameters": {
+						"$ref": "#/components/schemas/ParametersValuesMap"
+					},
 					"explore": {
 						"type": "string"
 					},
@@ -13377,6 +13828,9 @@
 					},
 					{
 						"properties": {
+							"parameters": {
+								"$ref": "#/components/schemas/ParametersValuesMap"
+							},
 							"pivotDimensions": {
 								"items": {
 									"type": "string"
@@ -13659,6 +14113,15 @@
 					},
 					"updatedByUser": {
 						"$ref": "#/components/schemas/Pick_UpdatedByUser.userUuid_"
+					},
+					"pinnedParameters": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"parameters": {
+						"$ref": "#/components/schemas/DashboardParameters"
 					},
 					"filters": {
 						"$ref": "#/components/schemas/DashboardFilters"
@@ -14382,22 +14845,22 @@
 					}
 				]
 			},
-			"PartialObjectDeep___91_x-string_93__58__name_63_-string-or-undefined--description_63_-string-or-undefined--tiles_63__58__40__type-DashboardTileTypes.SAVED_CHART-or-DashboardTileTypes.SQL_CHART--properties_58__chartName-string--title-string__-or-_type-DashboardTileTypes.MARKDOWN--properties_58__title-string--content-string__-or-_type-DashboardTileTypes.LOOM--properties_58__title-string___41_-Array-or-undefined__._recurseIntoArrays-true__": {
+			"PartialObjectDeep___91_x-string_93__58__name_63_-string-or-undefined--description_63_-string-or-undefined--tiles_63__58__40__type-DashboardTileTypes.SAVED_CHART-or-DashboardTileTypes.SQL_CHART--properties_58__title-string--chartName-string__-or-_type-DashboardTileTypes.MARKDOWN--properties_58__title-string--content-string__-or-_type-DashboardTileTypes.LOOM--properties_58__title-string___41_-Array-or-undefined__._recurseIntoArrays-true__": {
 				"properties": {},
 				"type": "object",
 				"description": "Same as `PartialDeep`, but accepts only `object`s as inputs. Internal helper for `PartialDeep`."
 			},
-			"PartialObjectDeep__dashboard_58___91_x-string_93__58__name_63_-string-or-undefined--description_63_-string-or-undefined--tiles_63__58__40__type-DashboardTileTypes.SAVED_CHART-or-DashboardTileTypes.SQL_CHART--properties_58__chartName-string--title-string__-or-_type-DashboardTileTypes.MARKDOWN--properties_58__title-string--content-string__-or-_type-DashboardTileTypes.LOOM--properties_58__title-string___41_-Array-or-undefined___._recurseIntoArrays-true__": {
+			"PartialObjectDeep__dashboard_58___91_x-string_93__58__name_63_-string-or-undefined--description_63_-string-or-undefined--tiles_63__58__40__type-DashboardTileTypes.SAVED_CHART-or-DashboardTileTypes.SQL_CHART--properties_58__title-string--chartName-string__-or-_type-DashboardTileTypes.MARKDOWN--properties_58__title-string--content-string__-or-_type-DashboardTileTypes.LOOM--properties_58__title-string___41_-Array-or-undefined___._recurseIntoArrays-true__": {
 				"properties": {
 					"dashboard": {
-						"$ref": "#/components/schemas/PartialObjectDeep___91_x-string_93__58__name_63_-string-or-undefined--description_63_-string-or-undefined--tiles_63__58__40__type-DashboardTileTypes.SAVED_CHART-or-DashboardTileTypes.SQL_CHART--properties_58__chartName-string--title-string__-or-_type-DashboardTileTypes.MARKDOWN--properties_58__title-string--content-string__-or-_type-DashboardTileTypes.LOOM--properties_58__title-string___41_-Array-or-undefined__._recurseIntoArrays-true__"
+						"$ref": "#/components/schemas/PartialObjectDeep___91_x-string_93__58__name_63_-string-or-undefined--description_63_-string-or-undefined--tiles_63__58__40__type-DashboardTileTypes.SAVED_CHART-or-DashboardTileTypes.SQL_CHART--properties_58__title-string--chartName-string__-or-_type-DashboardTileTypes.MARKDOWN--properties_58__title-string--content-string__-or-_type-DashboardTileTypes.LOOM--properties_58__title-string___41_-Array-or-undefined__._recurseIntoArrays-true__"
 					}
 				},
 				"type": "object",
 				"description": "Same as `PartialDeep`, but accepts only `object`s as inputs. Internal helper for `PartialDeep`."
 			},
 			"PartialDeep_DashboardAsCodeLanguageMap._recurseIntoArrays-true__": {
-				"$ref": "#/components/schemas/PartialObjectDeep__dashboard_58___91_x-string_93__58__name_63_-string-or-undefined--description_63_-string-or-undefined--tiles_63__58__40__type-DashboardTileTypes.SAVED_CHART-or-DashboardTileTypes.SQL_CHART--properties_58__chartName-string--title-string__-or-_type-DashboardTileTypes.MARKDOWN--properties_58__title-string--content-string__-or-_type-DashboardTileTypes.LOOM--properties_58__title-string___41_-Array-or-undefined___._recurseIntoArrays-true__",
+				"$ref": "#/components/schemas/PartialObjectDeep__dashboard_58___91_x-string_93__58__name_63_-string-or-undefined--description_63_-string-or-undefined--tiles_63__58__40__type-DashboardTileTypes.SAVED_CHART-or-DashboardTileTypes.SQL_CHART--properties_58__title-string--chartName-string__-or-_type-DashboardTileTypes.MARKDOWN--properties_58__title-string--content-string__-or-_type-DashboardTileTypes.LOOM--properties_58__title-string___41_-Array-or-undefined___._recurseIntoArrays-true__",
 				"description": "Create a type from another type with all keys and nested keys set to optional.\n\nUse-cases:\n- Merging a default settings/config object with another object, the second object would be a deep partial of the default object.\n- Mocking and testing complex entities, where populating an entire object with its keys would be redundant in terms of the mock or test."
 			},
 			"ApiDashboardAsCodeListResponse": {
@@ -15160,6 +15623,10 @@
 						"type": "string",
 						"nullable": true
 					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
 					"createdByUserUuid": {
 						"type": "string",
 						"nullable": true
@@ -15178,6 +15645,7 @@
 				},
 				"required": [
 					"upstreamProjectUuid",
+					"createdAt",
 					"createdByUserUuid",
 					"type",
 					"name",
@@ -17079,20 +17547,17 @@
 				],
 				"type": "object"
 			},
-			"Pick_DBProjectGroupAccess.role_": {
+			"UpdateDBProjectGroupAccess": {
 				"properties": {
+					"role_uuid": {
+						"type": "string",
+						"nullable": true
+					},
 					"role": {
 						"$ref": "#/components/schemas/ProjectMemberRole"
 					}
 				},
-				"required": [
-					"role"
-				],
-				"type": "object",
-				"description": "From T, pick a set of properties whose keys are in the union K"
-			},
-			"UpdateDBProjectGroupAccess": {
-				"$ref": "#/components/schemas/Pick_DBProjectGroupAccess.role_"
+				"type": "object"
 			},
 			"ApiGdriveAccessTokenResponse": {
 				"properties": {
@@ -17195,6 +17660,25 @@
 					"metricQuery",
 					"exploreId",
 					"projectUuid"
+				],
+				"type": "object"
+			},
+			"SelectBody": {
+				"properties": {
+					"property": {
+						"type": "string"
+					},
+					"account": {
+						"type": "string"
+					},
+					"connectionUuid": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"property",
+					"account",
+					"connectionUuid"
 				],
 				"type": "object"
 			},
@@ -17444,6 +17928,9 @@
 						},
 						"type": "array"
 					},
+					"parameters": {
+						"$ref": "#/components/schemas/Record_string.LightdashProjectParameter_"
+					},
 					"warehouse": {
 						"type": "string"
 					},
@@ -17568,6 +18055,78 @@
 							"url"
 						],
 						"type": "object"
+					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"ok"
+						],
+						"nullable": false
+					}
+				},
+				"required": [
+					"results",
+					"status"
+				],
+				"type": "object"
+			},
+			"StartBody": {
+				"properties": {
+					"shop_url": {
+						"type": "string"
+					},
+					"projectUuid": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"projectUuid"
+				],
+				"type": "object"
+			},
+			"ConnectionType": {
+				"enum": [
+					"shopify",
+					"ga"
+				],
+				"type": "string"
+			},
+			"Connection": {
+				"properties": {
+					"connectionUuid": {
+						"type": "string"
+					},
+					"type": {
+						"$ref": "#/components/schemas/ConnectionType"
+					},
+					"userUuid": {
+						"type": "string",
+						"nullable": true
+					},
+					"propertyId": {
+						"type": "string",
+						"nullable": true
+					},
+					"shopUrl": {
+						"type": "string",
+						"nullable": true
+					}
+				},
+				"required": [
+					"connectionUuid",
+					"type",
+					"userUuid"
+				],
+				"type": "object",
+				"additionalProperties": true
+			},
+			"ConnApiSuccess_Connection-Array_": {
+				"properties": {
+					"results": {
+						"items": {
+							"$ref": "#/components/schemas/Connection"
+						},
+						"type": "array"
 					},
 					"status": {
 						"type": "string",
@@ -17838,6 +18397,17 @@
 					},
 					{
 						"properties": {
+							"searchRank": {
+								"type": "number",
+								"format": "double"
+							},
+							"aiHints": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array",
+								"nullable": true
+							},
 							"icon": {
 								"allOf": [
 									{
@@ -17868,8 +18438,25 @@
 							"tableName": {
 								"type": "string"
 							},
+							"fieldValueType": {
+								"anyOf": [
+									{
+										"$ref": "#/components/schemas/MetricType"
+									},
+									{
+										"$ref": "#/components/schemas/DimensionType"
+									}
+								]
+							},
 							"basicType": {
-								"type": "string"
+								"type": "string",
+								"enum": [
+									"string",
+									"number",
+									"date",
+									"timestamp",
+									"boolean"
+								]
 							},
 							"type": {
 								"$ref": "#/components/schemas/CatalogType.Field"
@@ -17879,9 +18466,12 @@
 							}
 						},
 						"required": [
+							"aiHints",
 							"icon",
 							"categories",
 							"tableName",
+							"fieldValueType",
+							"basicType",
 							"type",
 							"catalogSearchUuid"
 						],
@@ -17927,6 +18517,24 @@
 					},
 					{
 						"properties": {
+							"searchRank": {
+								"type": "number",
+								"format": "double"
+							},
+							"joinedTables": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array",
+								"nullable": true
+							},
+							"aiHints": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array",
+								"nullable": true
+							},
 							"icon": {
 								"allOf": [
 									{
@@ -17938,12 +18546,6 @@
 							"chartUsage": {
 								"type": "number",
 								"format": "double"
-							},
-							"joinedTables": {
-								"items": {
-									"$ref": "#/components/schemas/CompiledExploreJoin"
-								},
-								"type": "array"
 							},
 							"categories": {
 								"items": {
@@ -17974,6 +18576,8 @@
 							}
 						},
 						"required": [
+							"joinedTables",
+							"aiHints",
 							"icon",
 							"categories",
 							"type",
@@ -18526,12 +19130,6 @@
 				],
 				"type": "object"
 			},
-			"SortBy": {
-				"items": {
-					"$ref": "#/components/schemas/VizSortBy"
-				},
-				"type": "array"
-			},
 			"ReadyQueryResultsPage": {
 				"allOf": [
 					{
@@ -18560,7 +19158,17 @@
 										"type": "array"
 									},
 									"indexColumn": {
-										"$ref": "#/components/schemas/PivotIndexColum"
+										"anyOf": [
+											{
+												"$ref": "#/components/schemas/PivotIndexColum"
+											},
+											{
+												"items": {
+													"$ref": "#/components/schemas/PivotIndexColum"
+												},
+												"type": "array"
+											}
+										]
 									},
 									"totalColumnCount": {
 										"type": "number",
@@ -18571,7 +19179,6 @@
 								"required": [
 									"originalColumns",
 									"valuesColumns",
-									"indexColumn",
 									"totalColumnCount"
 								],
 								"type": "object",
@@ -18742,6 +19349,7 @@
 					"calculateSubtotal",
 					"embed",
 					"ai",
+					"mcp",
 					"api",
 					"cli",
 					"metricsExplorer"
@@ -19060,31 +19668,7 @@
 					{
 						"properties": {
 							"pivotConfiguration": {
-								"properties": {
-									"sortBy": {
-										"$ref": "#/components/schemas/SortBy"
-									},
-									"groupByColumns": {
-										"items": {
-											"$ref": "#/components/schemas/GroupByColumn"
-										},
-										"type": "array"
-									},
-									"valuesColumns": {
-										"items": {
-											"$ref": "#/components/schemas/ValuesColumn"
-										},
-										"type": "array"
-									},
-									"indexColumn": {
-										"$ref": "#/components/schemas/PivotIndexColum"
-									}
-								},
-								"required": [
-									"valuesColumns",
-									"indexColumn"
-								],
-								"type": "object"
+								"$ref": "#/components/schemas/PivotConfiguration"
 							},
 							"limit": {
 								"type": "number",
@@ -19395,67 +19979,91 @@
 				"$ref": "#/components/schemas/Pick_DownloadAsyncQueryResultsRequestParams.Exclude_keyofDownloadAsyncQueryResultsRequestParams.queryUuid__",
 				"description": "Construct a type with the properties of T except for those in type K."
 			},
-			"LightdashProjectParameter": {
+			"ProjectParameterSummary": {
 				"properties": {
-					"options_from_dimension": {
-						"properties": {
-							"dimension": {
-								"type": "string"
-							},
-							"model": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"dimension",
-							"model"
-						],
-						"type": "object"
+					"config": {
+						"$ref": "#/components/schemas/LightdashProjectParameter"
 					},
-					"multiple": {
-						"type": "boolean"
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
 					},
-					"default": {
-						"anyOf": [
-							{
-								"type": "string"
-							},
-							{
-								"items": {
-									"type": "string"
-								},
-								"type": "array"
-							}
-						]
-					},
-					"options": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					},
-					"description": {
-						"type": "string"
-					},
-					"label": {
+					"name": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"label"
+					"config",
+					"createdAt",
+					"name"
 				],
 				"type": "object"
 			},
-			"Record_string.LightdashProjectParameter_": {
-				"properties": {},
-				"additionalProperties": {
-					"$ref": "#/components/schemas/LightdashProjectParameter"
+			"KnexPaginatedData_ProjectParameterSummary-Array_": {
+				"properties": {
+					"pagination": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/KnexPaginateArgs"
+							},
+							{
+								"properties": {
+									"totalResults": {
+										"type": "number",
+										"format": "double"
+									},
+									"totalPageCount": {
+										"type": "number",
+										"format": "double"
+									}
+								},
+								"required": [
+									"totalResults",
+									"totalPageCount"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/ProjectParameterSummary"
+						},
+						"type": "array"
+					}
 				},
-				"type": "object",
-				"description": "Construct a type with a set of properties K of type T"
+				"required": [
+					"data"
+				],
+				"type": "object"
+			},
+			"ApiGetProjectParametersListResults": {
+				"$ref": "#/components/schemas/KnexPaginatedData_ProjectParameterSummary-Array_"
+			},
+			"ApiSuccess_ApiGetProjectParametersListResults_": {
+				"properties": {
+					"results": {
+						"$ref": "#/components/schemas/ApiGetProjectParametersListResults"
+					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"ok"
+						],
+						"nullable": false
+					}
+				},
+				"required": [
+					"results",
+					"status"
+				],
+				"type": "object"
+			},
+			"ParameterDefinitions": {
+				"$ref": "#/components/schemas/Record_string.LightdashProjectParameter_"
 			},
 			"ApiGetProjectParametersResults": {
-				"$ref": "#/components/schemas/Record_string.LightdashProjectParameter_"
+				"$ref": "#/components/schemas/ParameterDefinitions"
 			},
 			"ApiSuccess_ApiGetProjectParametersResults_": {
 				"properties": {
@@ -20256,7 +20864,7 @@
 	},
 	"info": {
 		"title": "Lightdash API",
-		"version": "0.1842.1",
+		"version": "0.1925.0",
 		"description": "Open API documentation for all public Lightdash API endpoints. # Authentication Before you get started, you might need to create a Personal Access Token to authenticate via the API. You can create a token by following this guide: https://docs.lightdash.com/references/personal_tokens\n",
 		"license": {
 			"name": "MIT"
@@ -20298,6 +20906,1108 @@
 				],
 				"security": [],
 				"parameters": []
+			}
+		},
+		"/api/v2/roles/{roleUuid}": {
+			"get": {
+				"operationId": "GetRoleById",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiRoleWithScopesResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get role by ID",
+				"tags": [
+					"v2",
+					"Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "roleUuid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"patch": {
+				"operationId": "UpdateRole",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiDefaultRoleResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Update role",
+				"tags": [
+					"v2",
+					"Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "roleUuid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateRole"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteRole",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiDeleteRoleResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Delete role",
+				"tags": [
+					"v2",
+					"Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "roleUuid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/api/v2/roles/{roleUuid}/scopes": {
+			"post": {
+				"operationId": "AddScopesToRole",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiUnassignRoleFromUserResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Add scopes to role",
+				"tags": [
+					"v2",
+					"Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "roleUuid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AddScopesToRole"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v2/roles/{roleUuid}/scopes/{scopeName}": {
+			"delete": {
+				"operationId": "RemoveScopeFromRole",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiRemoveScopeFromRoleResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Remove scope from role",
+				"tags": [
+					"v2",
+					"Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "roleUuid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "scopeName",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/api/v2/projects/{projectId}/roles/assignments": {
+			"get": {
+				"operationId": "GetProjectRoleAssignments",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiRoleAssignmentListResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "List project role assignments",
+				"tags": [
+					"v2",
+					"Project Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "projectId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/api/v2/projects/{projectId}/roles/assignments/user/{userId}": {
+			"post": {
+				"operationId": "CreateProjectUserRoleAssignment",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiRoleAssignmentResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create project role assignment for user",
+				"tags": [
+					"v2",
+					"Project Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "projectId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "userId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateUserRoleAssignmentRequest"
+							}
+						}
+					}
+				}
+			},
+			"patch": {
+				"operationId": "UpdateProjectUserRoleAssignment",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiRoleAssignmentResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Update project role assignment for user",
+				"tags": [
+					"v2",
+					"Project Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "projectId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "userId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateRoleAssignmentRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteProjectUserRoleAssignment",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiUnassignRoleFromUserResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Delete project role assignment for user",
+				"tags": [
+					"v2",
+					"Project Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "projectId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "userId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/api/v2/projects/{projectId}/roles/assignments/group/{groupId}": {
+			"post": {
+				"operationId": "CreateProjectGroupRoleAssignment",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiRoleAssignmentResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create project role assignment for group",
+				"tags": [
+					"v2",
+					"Project Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "projectId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "groupId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateGroupRoleAssignmentRequest"
+							}
+						}
+					}
+				}
+			},
+			"patch": {
+				"operationId": "UpdateProjectGroupRoleAssignment",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiRoleAssignmentResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Update project role assignment for group",
+				"tags": [
+					"v2",
+					"Project Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "projectId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "groupId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateRoleAssignmentRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteProjectGroupRoleAssignment",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiUnassignRoleFromUserResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Delete project role assignment for group",
+				"tags": [
+					"v2",
+					"Project Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "projectId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "groupId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/api/v2/orgs/{orgUuid}/roles": {
+			"get": {
+				"operationId": "GetOrganizationRoles",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiGetRolesResponse"
+										},
+										{
+											"$ref": "#/components/schemas/ApiRoleWithScopesResponse"
+										}
+									]
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get roles for organization",
+				"tags": [
+					"v2",
+					"Organization Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "orgUuid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "load",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"post": {
+				"operationId": "CreateOrganizationRole",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiDefaultRoleResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create a new role in organization",
+				"tags": [
+					"v2",
+					"Organization Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "orgUuid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateRole"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v2/orgs/{orgUuid}/roles/{roleUuid}": {
+			"patch": {
+				"operationId": "UpdateOrganizationRole",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiDefaultRoleResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Update role in organization",
+				"tags": [
+					"v2",
+					"Organization Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "orgUuid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "roleUuid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateRole"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteOrganizationRole",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiUnassignRoleFromUserResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Delete role from organization",
+				"tags": [
+					"v2",
+					"Organization Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "orgUuid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "roleUuid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/api/v2/orgs/{orgUuid}/roles/assignments": {
+			"get": {
+				"operationId": "GetOrganizationRoleAssignments",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiRoleAssignmentListResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "List organization role assignments",
+				"tags": [
+					"v2",
+					"Organization Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "orgUuid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/api/v2/orgs/{orgUuid}/roles/assignments/user/{userId}": {
+			"post": {
+				"operationId": "CreateOrganizationUserRoleAssignment",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiRoleAssignmentResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create organization role assignment for user",
+				"tags": [
+					"v2",
+					"Organization Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "orgUuid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "userId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateUserRoleAssignmentRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteOrganizationUserRoleAssignment",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiUnassignRoleFromUserResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Delete organization role assignment for user",
+				"tags": [
+					"v2",
+					"Organization Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "orgUuid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "userId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/api/v2/orgs/{orgUuid}/roles/assignments/group/{groupId}": {
+			"post": {
+				"operationId": "CreateOrganizationGroupRoleAssignment",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiRoleAssignmentResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create organization role assignment for group",
+				"tags": [
+					"v2",
+					"Organization Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "orgUuid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "groupId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateGroupRoleAssignmentRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteOrganizationGroupRoleAssignment",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiUnassignRoleFromUserResponse"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Delete organization role assignment for group",
+				"tags": [
+					"v2",
+					"Organization Roles"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "orgUuid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "groupId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/api/v1/projects/{projectUuid}/validate": {
@@ -23446,6 +25156,57 @@
 				}
 			}
 		},
+		"/api/v1/auth/shopify/refresh": {
+			"post": {
+				"operationId": "RefreshShopifyData",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiSuccessEmpty"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Trigger Shopify data ingestion",
+				"tags": [
+					"Shopify"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"shopUrl": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"shopUrl"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/api/v1/share/{nanoId}": {
 			"get": {
 				"operationId": "getShareUrl",
@@ -24532,6 +26293,9 @@
 						"application/json": {
 							"schema": {
 								"properties": {
+									"parameters": {
+										"$ref": "#/components/schemas/ParametersValuesMap"
+									},
 									"invalidateCache": {
 										"type": "boolean"
 									},
@@ -28573,6 +30337,127 @@
 				}
 			}
 		},
+		"/api/v1/google-analytics/accounts": {
+			"get": {
+				"operationId": "ListAccounts",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiSuccessEmpty"
+								}
+							}
+						}
+					}
+				},
+				"description": "OAuth2 callback from Google. Writes tokens to DB, marks connection inactive (pending selection),\nredirects to the UI which will open the GA selection modal.",
+				"tags": [
+					"GoogleAnalytics"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "connection",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/api/v1/google-analytics/properties": {
+			"get": {
+				"operationId": "ListProperties",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiSuccessEmpty"
+								}
+							}
+						}
+					}
+				},
+				"description": "List GA properties for a specific account.",
+				"tags": [
+					"GoogleAnalytics"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "connection",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "account",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/api/v1/google-analytics/select": {
+			"post": {
+				"operationId": "SelectProperty",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"property_id": {
+											"type": "string"
+										},
+										"ok": {
+											"type": "boolean",
+											"enum": [
+												true
+											],
+											"nullable": false
+										}
+									},
+									"required": [
+										"property_id",
+										"ok"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Persist the user's selection and (optionally) trigger ingestion.",
+				"tags": [
+					"GoogleAnalytics"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SelectBody"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/api/v1/github/install": {
 			"get": {
 				"operationId": "installGithubAppForOrganization",
@@ -29421,6 +31306,84 @@
 				]
 			}
 		},
+		"/api/v1/connectors/{key}/start": {
+			"post": {
+				"operationId": "Start",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiSuccessEmpty"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Connectors"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "key",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"shopify",
+								"ga"
+							]
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/StartBody"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/connections": {
+			"get": {
+				"operationId": "getConnections",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ConnApiSuccess_Connection-Array_"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get user connections\nReturns all connections (Shopify, Google Analytics, etc.) for the current user",
+				"tags": [
+					"Connections"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
 		"/api/v1/comments/dashboards/{dashboardUuid}/{dashboardTileUuid}": {
 			"post": {
 				"operationId": "createComment",
@@ -29707,6 +31670,28 @@
 						"required": false,
 						"schema": {
 							"$ref": "#/components/schemas/CatalogFilter"
+						}
+					},
+					{
+						"in": "query",
+						"name": "yamlTags",
+						"required": false,
+						"schema": {
+							"type": "array",
+							"items": {
+								"type": "string"
+							}
+						}
+					},
+					{
+						"in": "query",
+						"name": "tables",
+						"required": false,
+						"schema": {
+							"type": "array",
+							"items": {
+								"type": "string"
+							}
 						}
 					}
 				]
@@ -30672,8 +32657,9 @@
 						}
 					}
 				},
+				"description": "Retrieves paginated results from a previously executed async query using its UUID",
+				"summary": "Get results",
 				"tags": [
-					"v2",
 					"Query"
 				],
 				"security": [],
@@ -30687,6 +32673,7 @@
 						}
 					},
 					{
+						"description": "The UUID of the async query to retrieve results for",
 						"in": "path",
 						"name": "queryUuid",
 						"required": true,
@@ -30695,6 +32682,7 @@
 						}
 					},
 					{
+						"description": "Page number for pagination (starts at 1)",
 						"in": "query",
 						"name": "page",
 						"required": false,
@@ -30704,6 +32692,7 @@
 						}
 					},
 					{
+						"description": "Number of results per page (default: 500, max: 5000)",
 						"in": "query",
 						"name": "pageSize",
 						"required": false,
@@ -30740,8 +32729,9 @@
 						}
 					}
 				},
+				"description": "Cancels a running async query and discards any partial results",
+				"summary": "Cancel query",
 				"tags": [
-					"v2",
 					"Query"
 				],
 				"security": [],
@@ -30755,6 +32745,7 @@
 						}
 					},
 					{
+						"description": "The UUID of the async query to cancel",
 						"in": "path",
 						"name": "queryUuid",
 						"required": true,
@@ -30790,8 +32781,9 @@
 						}
 					}
 				},
+				"description": "Executes a metric query asynchronously against your data warehouse using dimensions, metrics, filters, and sorts",
+				"summary": "Execute metric query",
 				"tags": [
-					"v2",
 					"Query"
 				],
 				"security": [],
@@ -30842,8 +32834,9 @@
 						}
 					}
 				},
+				"description": "Executes a saved chart query asynchronously with optional parameter overrides",
+				"summary": "Execute saved chart",
 				"tags": [
-					"v2",
 					"Query"
 				],
 				"security": [],
@@ -30894,8 +32887,9 @@
 						}
 					}
 				},
+				"description": "Executes a chart within a dashboard context asynchronously with inherited dashboard filters",
+				"summary": "Execute dashboard chart",
 				"tags": [
-					"v2",
 					"Query"
 				],
 				"security": [],
@@ -30946,8 +32940,9 @@
 						}
 					}
 				},
+				"description": "Executes a query to retrieve underlying raw data for drilling down into aggregated values",
+				"summary": "Execute underlying data",
 				"tags": [
-					"v2",
 					"Query"
 				],
 				"security": [],
@@ -30998,8 +32993,9 @@
 						}
 					}
 				},
+				"description": "Executes a raw SQL query asynchronously against your data warehouse for custom queries",
+				"summary": "Execute SQL query",
 				"tags": [
-					"v2",
 					"Query"
 				],
 				"security": [],
@@ -31050,8 +33046,9 @@
 						}
 					}
 				},
+				"description": "Executes a saved SQL chart query asynchronously with optional chart configurations",
+				"summary": "Execute SQL chart",
 				"tags": [
-					"v2",
 					"Query"
 				],
 				"security": [],
@@ -31102,8 +33099,9 @@
 						}
 					}
 				},
+				"description": "Executes a SQL chart within a dashboard context asynchronously with inherited filters",
+				"summary": "Execute dashboard SQL chart",
 				"tags": [
-					"v2",
 					"Query"
 				],
 				"security": [],
@@ -31127,57 +33125,6 @@
 						}
 					}
 				}
-			}
-		},
-		"/api/v2/projects/{projectUuid}/query/{queryUuid}/results": {
-			"get": {
-				"operationId": "getResultsStream",
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/AnyType"
-								}
-							}
-						}
-					},
-					"default": {
-						"description": "Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorPayload"
-								}
-							}
-						}
-					}
-				},
-				"description": "Stream results from S3",
-				"tags": [
-					"v2",
-					"Query"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "projectUuid",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "path",
-						"name": "queryUuid",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
 			}
 		},
 		"/api/v2/projects/{projectUuid}/query/{queryUuid}/download": {
@@ -31205,8 +33152,9 @@
 						}
 					}
 				},
+				"description": "Downloads query results in various formats with custom formatting options",
+				"summary": "Download results",
 				"tags": [
-					"v2",
 					"Query"
 				],
 				"security": [],
@@ -31220,6 +33168,7 @@
 						}
 					},
 					{
+						"description": "The UUID of the completed async query to download",
 						"in": "path",
 						"name": "queryUuid",
 						"required": true,
@@ -31238,6 +33187,100 @@
 						}
 					}
 				}
+			}
+		},
+		"/api/v2/projects/{projectUuid}/parameters/list": {
+			"get": {
+				"operationId": "getProjectParametersList",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiSuccess_ApiGetProjectParametersListResults_"
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get a paginated list of project parameters with search and sorting capabilities.",
+				"summary": "List project parameters",
+				"tags": [
+					"v2",
+					"Parameters"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "projectUuid",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"name",
+								"created_at"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
 			}
 		},
 		"/api/v2/projects/{projectUuid}/parameters": {
@@ -31664,6 +33707,10 @@
 			"externalDocs": {
 				"url": "https://docs.lightdash.com/references/roles"
 			}
+		},
+		{
+			"name": "Query",
+			"description": "These routes allow users to execute and manage queries against their data warehouse. This includes metric queries, SQL queries, and retrieving query results."
 		}
 	]
 }

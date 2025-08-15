@@ -1,22 +1,22 @@
 import { z } from 'zod';
 import {
+    toolFindChartsArgsSchema,
+    toolFindDashboardsArgsSchema,
     toolFindExploresArgsSchema,
     toolFindFieldsArgsSchema,
-    toolNewFindFieldsArgsSchema,
     toolTableVizArgsSchema,
     toolTimeSeriesArgsSchema,
     toolVerticalBarArgsSchema,
 } from './tools';
 
-export * from './fieldSearchQuery';
 export * from './filters';
 export * from './tools';
 export * from './visualizations';
 
-// TODO: use `discriminatedUnion` after removing old find fields tool
-export const AgentToolCallArgsSchema = z.union([
+export const AgentToolCallArgsSchema = z.discriminatedUnion('type', [
+    toolFindChartsArgsSchema,
+    toolFindDashboardsArgsSchema,
     toolFindFieldsArgsSchema,
-    toolNewFindFieldsArgsSchema,
     toolVerticalBarArgsSchema,
     toolTableVizArgsSchema,
     toolTimeSeriesArgsSchema,

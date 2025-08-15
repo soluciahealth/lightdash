@@ -45,6 +45,7 @@ import {
     UpdateEmbed,
     UserAccessControls,
     UserAttributeValueMap,
+    type ParametersValuesMap,
 } from '@lightdash/common';
 import { isArray } from 'lodash';
 import { nanoid as nanoidGenerator } from 'nanoid';
@@ -58,6 +59,10 @@ import { ProjectModel } from '../../../models/ProjectModel/ProjectModel';
 import { SavedChartModel } from '../../../models/SavedChartModel';
 import { UserAttributesModel } from '../../../models/UserAttributesModel';
 import { BaseService } from '../../../services/BaseService';
+import {
+    combineProjectAndExploreParameters,
+    getDashboardParametersValuesMap,
+} from '../../../services/ProjectService/parameters';
 import { ProjectService } from '../../../services/ProjectService/ProjectService';
 import { getFilteredExplore } from '../../../services/UserAttributesService/UserAttributeUtils';
 import { EncryptionUtil } from '../../../utils/EncryptionUtil/EncryptionUtil';
@@ -623,6 +628,25 @@ export class EmbedService extends BaseService {
         return { userAttributes, intrinsicUserAttributes };
     }
 
+    /**
+     * Get all available parameters for a project and explore
+     * @param projectUuid - The UUID of the project
+     * @param explore - The explore to get the parameters for
+     * @returns An array of available parameters
+     */
+    private async getAvailableParameters(
+        projectUuid: string,
+        explore: Explore,
+    ): Promise<string[]> {
+        const projectParameters =
+            await this.projectService.projectParametersModel.find(projectUuid);
+
+        return combineProjectAndExploreParameters(
+            projectParameters,
+            explore.parameters,
+        );
+    }
+
     private async _runEmbedQuery({
         projectUuid,
         metricQuery,
@@ -630,6 +654,7 @@ export class EmbedService extends BaseService {
         queryTags,
         account,
         dateZoomGranularity,
+        combinedParameters,
     }: {
         projectUuid: string;
         metricQuery: MetricQuery;
@@ -641,6 +666,7 @@ export class EmbedService extends BaseService {
         };
         account: AnonymousAccount;
         dateZoomGranularity?: DateGranularity;
+        combinedParameters?: ParametersValuesMap;
     }) {
         const { warehouseClient, sshTunnel } = await this._getWarehouseClient(
             projectUuid,
@@ -652,19 +678,27 @@ export class EmbedService extends BaseService {
 
         // Filter the explore access and fields based on the user attributes
         const filteredExplore = getFilteredExplore(explore, userAttributes);
-        const compiledQuery = await ProjectService._compileQuery(
-            metricQuery,
+
+        const availableParameters = await this.getAvailableParameters(
+            projectUuid,
             filteredExplore,
-            warehouseClient,
+        );
+
+        const compiledQuery = await ProjectService._compileQuery({
+            metricQuery,
+            explore: filteredExplore,
+            warehouseSqlBuilder: warehouseClient,
             intrinsicUserAttributes,
             userAttributes,
-            this.lightdashConfig.query.timezone || 'UTC',
-            dateZoomGranularity
+            timezone: this.lightdashConfig.query.timezone || 'UTC',
+            dateZoom: dateZoomGranularity
                 ? {
                       granularity: dateZoomGranularity,
                   }
                 : undefined,
-        );
+            parameters: combinedParameters,
+            availableParameters,
+        });
 
         const results =
             await this.projectService.getResultsFromCacheOrWarehouse({
@@ -814,6 +848,15 @@ export class EmbedService extends BaseService {
             },
         });
 
+        const dashboardParameters = getDashboardParametersValuesMap(dashboard);
+
+        // No parameters are passed in embed requests, just combine the saved parameters
+        const combinedParameters = await this.projectService.combineParameters(
+            projectUuid,
+            {},
+            dashboardParameters,
+        );
+
         const { rows, cacheMetadata, fields } = await this._runEmbedQuery({
             projectUuid,
             metricQuery: metricQueryWithDashboardOverrides,
@@ -830,6 +873,7 @@ export class EmbedService extends BaseService {
             },
             account,
             dateZoomGranularity,
+            combinedParameters,
         });
 
         return {
@@ -939,6 +983,21 @@ export class EmbedService extends BaseService {
         const { userAttributes, intrinsicUserAttributes } =
             this.getAccessControls(account);
 
+        const dashboard = await this.dashboardModel.getById(dashboardUuid);
+        const dashboardParameters = getDashboardParametersValuesMap(dashboard);
+
+        // No parameters are passed in embed requests, just combine the saved parameters
+        const combinedParameters = await this.projectService.combineParameters(
+            projectUuid,
+            {},
+            dashboardParameters,
+        );
+
+        const availableParameters = await this.getAvailableParameters(
+            projectUuid,
+            explore,
+        );
+
         const { totalQuery: totalMetricQuery } =
             await this.projectService._getCalculateTotalQuery(
                 userAttributes,
@@ -946,6 +1005,9 @@ export class EmbedService extends BaseService {
                 explore,
                 metricQuery,
                 warehouseClient,
+                availableParameters,
+                undefined,
+                combinedParameters,
             );
 
         const { rows } = await this._runEmbedQuery({
@@ -963,6 +1025,7 @@ export class EmbedService extends BaseService {
                 query_context: QueryExecutionContext.CALCULATE_TOTAL,
             },
             account,
+            combinedParameters,
         });
 
         if (rows.length === 0) {
@@ -998,6 +1061,16 @@ export class EmbedService extends BaseService {
             ...(metricQuery.additionalMetrics?.map((m) => m.name) || []),
         ];
 
+        const dashboard = await this.dashboardModel.getById(dashboardUuid);
+        const dashboardParameters = getDashboardParametersValuesMap(dashboard);
+
+        // No parameters are passed in embed requests, just combine the saved parameters
+        const combinedParameters = await this.projectService.combineParameters(
+            projectUuid,
+            {},
+            dashboardParameters,
+        );
+
         return this._calculateSubtotalsForEmbed(
             account,
             projectUuid,
@@ -1008,6 +1081,7 @@ export class EmbedService extends BaseService {
             chart.organizationUuid,
             chart.uuid,
             dashboardUuid,
+            combinedParameters,
         );
     }
 
@@ -1021,6 +1095,7 @@ export class EmbedService extends BaseService {
         organizationUuid?: string,
         chartUuid?: string,
         dashboardUuid?: string,
+        combinedParameters?: ParametersValuesMap,
     ) {
         // Use the shared utility to prepare dimension groups
         const { dimensionGroupsToSubtotal, analyticsData } =
@@ -1073,6 +1148,7 @@ export class EmbedService extends BaseService {
                         query_context: QueryExecutionContext.CALCULATE_SUBTOTAL,
                     },
                     account,
+                    combinedParameters,
                 });
 
                 // Format raw rows (this matches the logic in ProjectService)

@@ -191,6 +191,7 @@ export const lightdashConfigMock: LightdashConfig = {
         copilot: {
             enabled: false,
             debugLoggingEnabled: false,
+            maxQueryLimit: 10000,
             telemetryEnabled: false,
             requiresFeatureFlag: false,
             defaultProvider: 'openai',
@@ -198,9 +199,9 @@ export const lightdashConfigMock: LightdashConfig = {
                 openai: {
                     apiKey: 'mock_api_key',
                     modelName: 'mock_model_name',
+                    temperature: 0.2,
                 },
             },
-            __experimental__toolFindFields: false,
         },
     },
     embedding: {
@@ -240,5 +241,11 @@ export const lightdashConfigMock: LightdashConfig = {
     },
     googleCloudPlatform: {
         projectId: 'test-project-id',
+    },
+    mcp: {
+        enabled: true,
+    },
+    customRoles: {
+        enabled: false,
     },
 };
