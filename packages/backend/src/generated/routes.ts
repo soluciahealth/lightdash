@@ -2820,6 +2820,11 @@ const models: TsoaRoute.Models = {
         "type": {"ref":"ApiSuccess_SlackSettings-or-undefined_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiSuccess_any_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"results":{"dataType":"any","required":true},"status":{"dataType":"enum","enums":["ok"],"required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ShareUrl": {
         "dataType": "refAlias",
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"host":{"dataType":"string"},"url":{"dataType":"string"},"shareUrl":{"dataType":"string"},"organizationUuid":{"dataType":"string"},"createdByUserUuid":{"dataType":"string"},"params":{"dataType":"string","required":true},"path":{"dataType":"string","required":true},"nanoid":{"dataType":"string","required":true}},"validators":{}},
@@ -4422,7 +4427,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "StartBody": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"shop_url":{"dataType":"string"},"projectUuid":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"shop_url":{"dataType":"string"}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ConnectionType": {

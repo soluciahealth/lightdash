@@ -6,7 +6,7 @@ import { Request } from '@tsoa/runtime'
 import { ApiSuccessEmpty } from '@lightdash/common';
 import { ApiSuccess } from '@lightdash/common/dist/types/types/api/success';
 
-type StartBody = { projectUuid: string; shop_url?: string };
+type StartBody = { shop_url?: string };
 type StartResp = { startUrl: string };
 
 // hardcode callback paths here for now

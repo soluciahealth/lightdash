@@ -10858,6 +10858,23 @@
 			"ApiSlackGetInstallationResponse": {
 				"$ref": "#/components/schemas/ApiSuccess_SlackSettings-or-undefined_"
 			},
+			"ApiSuccess_any_": {
+				"properties": {
+					"results": {},
+					"status": {
+						"type": "string",
+						"enum": [
+							"ok"
+						],
+						"nullable": false
+					}
+				},
+				"required": [
+					"results",
+					"status"
+				],
+				"type": "object"
+			},
 			"ShareUrl": {
 				"properties": {
 					"host": {
@@ -18074,14 +18091,8 @@
 				"properties": {
 					"shop_url": {
 						"type": "string"
-					},
-					"projectUuid": {
-						"type": "string"
 					}
 				},
-				"required": [
-					"projectUuid"
-				],
 				"type": "object"
 			},
 			"ConnectionType": {
@@ -25110,7 +25121,14 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiSuccessEmpty"
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiSuccess_any_"
+										},
+										{
+											"$ref": "#/components/schemas/ApiErrorPayload"
+										}
+									]
 								}
 							}
 						}
@@ -30346,7 +30364,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiSuccessEmpty"
+									"$ref": "#/components/schemas/ApiSuccess_any_"
 								}
 							}
 						}
@@ -30378,7 +30396,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiSuccessEmpty"
+									"$ref": "#/components/schemas/ApiSuccess_any_"
 								}
 							}
 						}
@@ -30418,23 +30436,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"properties": {
-										"property_id": {
-											"type": "string"
-										},
-										"ok": {
-											"type": "boolean",
-											"enum": [
-												true
-											],
-											"nullable": false
-										}
-									},
-									"required": [
-										"property_id",
-										"ok"
-									],
-									"type": "object"
+									"$ref": "#/components/schemas/ApiSuccess_any_"
 								}
 							}
 						}
@@ -31315,7 +31317,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiSuccessEmpty"
+									"$ref": "#/components/schemas/ApiSuccess_any_"
 								}
 							}
 						}
