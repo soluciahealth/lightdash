@@ -250,9 +250,6 @@ apiV1Router.get('/logout', (req, res, next) => {
     });
 });
 
-
-
-
 apiV1Router.use('/saved', savedChartRouter);
 apiV1Router.use('/invite-links', inviteLinksRouter);
 apiV1Router.use('/org', organizationRouter);
