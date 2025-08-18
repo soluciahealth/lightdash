@@ -86,8 +86,6 @@ import { DashboardController } from './../controllers/dashboardController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { CsvController } from './../controllers/csvController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { ConnectorsController } from './../controllers/connectorsController';
-// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { ConnectionsController } from './../controllers/connectionsController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { CommentsController } from './../controllers/commentsController';
@@ -4447,7 +4445,7 @@ const models: TsoaRoute.Models = {
         "additionalProperties": true,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ConnApiSuccess_Connection-Array_": {
+    "ApiSuccess_Connection-Array_": {
         "dataType": "refAlias",
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"results":{"dataType":"array","array":{"dataType":"refObject","ref":"Connection"},"required":true},"status":{"dataType":"enum","enums":["ok"],"required":true}},"validators":{}},
     },
@@ -10149,8 +10147,113 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsShopifyAuthController_shopifyAuthCallback: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+        };
+        app.get('/api/v1/auth/shopify/callback',
+            ...(fetchMiddlewares<RequestHandler>(ShopifyAuthController)),
+            ...(fetchMiddlewares<RequestHandler>(ShopifyAuthController.prototype.shopifyAuthCallback)),
+
+            async function ShopifyAuthController_shopifyAuthCallback(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsShopifyAuthController_shopifyAuthCallback, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ShopifyAuthController>(ShopifyAuthController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'shopifyAuthCallback',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsShopifyAuthController_shopifyInstallRedirect: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+        };
+        app.get('/api/v1/auth/shopify/start',
+            ...(fetchMiddlewares<RequestHandler>(ShopifyAuthController)),
+            ...(fetchMiddlewares<RequestHandler>(ShopifyAuthController.prototype.shopifyInstallRedirect)),
+
+            async function ShopifyAuthController_shopifyInstallRedirect(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsShopifyAuthController_shopifyInstallRedirect, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ShopifyAuthController>(ShopifyAuthController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'shopifyInstallRedirect',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsShopifyAuthController_redirectToEspn2: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+        };
+        app.get('/api/v1/auth/shopify/redirect2',
+            ...(fetchMiddlewares<RequestHandler>(ShopifyAuthController)),
+            ...(fetchMiddlewares<RequestHandler>(ShopifyAuthController.prototype.redirectToEspn2)),
+
+            async function ShopifyAuthController_redirectToEspn2(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsShopifyAuthController_redirectToEspn2, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ShopifyAuthController>(ShopifyAuthController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'redirectToEspn2',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsShopifyAuthController_shopifySetupUser: Record<string, TsoaRoute.ParameterSchema> = {
-                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"userUuid":{"dataType":"string","required":true},"shopUrl":{"dataType":"string","required":true}}},
+                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"connectionUuid":{"dataType":"string","required":true},"userUuid":{"dataType":"string","required":true},"shopUrl":{"dataType":"string","required":true}}},
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
                 res: {"in":"request","name":"res","required":true,"dataType":"object"},
         };
@@ -10175,42 +10278,6 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'shopifySetupUser',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsShopifyAuthController_refreshShopifyData: Record<string, TsoaRoute.ParameterSchema> = {
-                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"shopUrl":{"dataType":"string","required":true}}},
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-        };
-        app.post('/api/v1/auth/shopify/refresh',
-            ...(fetchMiddlewares<RequestHandler>(ShopifyAuthController)),
-            ...(fetchMiddlewares<RequestHandler>(ShopifyAuthController.prototype.refreshShopifyData)),
-
-            async function ShopifyAuthController_refreshShopifyData(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsShopifyAuthController_refreshShopifyData, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<ShopifyAuthController>(ShopifyAuthController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'refreshShopifyData',
                 controller,
                 response,
                 next,
@@ -13795,11 +13862,81 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsGoogleAnalyticsController_googleAnalyticsAuthStart: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+        };
+        app.get('/api/v1/auth/google-analytics/start',
+            ...(fetchMiddlewares<RequestHandler>(GoogleAnalyticsController)),
+            ...(fetchMiddlewares<RequestHandler>(GoogleAnalyticsController.prototype.googleAnalyticsAuthStart)),
+
+            async function GoogleAnalyticsController_googleAnalyticsAuthStart(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsGoogleAnalyticsController_googleAnalyticsAuthStart, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<GoogleAnalyticsController>(GoogleAnalyticsController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'googleAnalyticsAuthStart',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsGoogleAnalyticsController_googleAnalyticsAuthCallback: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+        };
+        app.get('/api/v1/auth/google-analytics/callback',
+            ...(fetchMiddlewares<RequestHandler>(GoogleAnalyticsController)),
+            ...(fetchMiddlewares<RequestHandler>(GoogleAnalyticsController.prototype.googleAnalyticsAuthCallback)),
+
+            async function GoogleAnalyticsController_googleAnalyticsAuthCallback(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsGoogleAnalyticsController_googleAnalyticsAuthCallback, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<GoogleAnalyticsController>(GoogleAnalyticsController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'googleAnalyticsAuthCallback',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsGoogleAnalyticsController_listAccounts: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
                 connection: {"in":"query","name":"connection","required":true,"dataType":"string"},
         };
-        app.get('/api/v1/google-analytics/accounts',
+        app.get('/api/v1/auth/google-analytics/accounts',
             ...(fetchMiddlewares<RequestHandler>(GoogleAnalyticsController)),
             ...(fetchMiddlewares<RequestHandler>(GoogleAnalyticsController.prototype.listAccounts)),
 
@@ -13836,7 +13973,7 @@ export function RegisterRoutes(app: Router) {
                 connection: {"in":"query","name":"connection","required":true,"dataType":"string"},
                 account: {"in":"query","name":"account","required":true,"dataType":"string"},
         };
-        app.get('/api/v1/google-analytics/properties',
+        app.get('/api/v1/auth/google-analytics/properties',
             ...(fetchMiddlewares<RequestHandler>(GoogleAnalyticsController)),
             ...(fetchMiddlewares<RequestHandler>(GoogleAnalyticsController.prototype.listProperties)),
 
@@ -13872,7 +14009,7 @@ export function RegisterRoutes(app: Router) {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
                 body: {"in":"body","name":"body","required":true,"ref":"SelectBody"},
         };
-        app.post('/api/v1/google-analytics/select',
+        app.post('/api/v1/auth/google-analytics/select',
             ...(fetchMiddlewares<RequestHandler>(GoogleAnalyticsController)),
             ...(fetchMiddlewares<RequestHandler>(GoogleAnalyticsController.prototype.selectProperty)),
 
@@ -14487,27 +14624,27 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsConnectorsController_start: Record<string, TsoaRoute.ParameterSchema> = {
+        const argsConnectionsController_start: Record<string, TsoaRoute.ParameterSchema> = {
                 key: {"in":"path","name":"key","required":true,"dataType":"union","subSchemas":[{"dataType":"enum","enums":["shopify"]},{"dataType":"enum","enums":["ga"]}]},
                 body: {"in":"body","name":"body","required":true,"ref":"StartBody"},
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
                 res: {"in":"request","name":"res","required":true,"dataType":"object"},
         };
-        app.post('/api/v1/connectors/:key/start',
-            ...(fetchMiddlewares<RequestHandler>(ConnectorsController)),
-            ...(fetchMiddlewares<RequestHandler>(ConnectorsController.prototype.start)),
+        app.post('/api/v1/connections/:key/start',
+            ...(fetchMiddlewares<RequestHandler>(ConnectionsController)),
+            ...(fetchMiddlewares<RequestHandler>(ConnectionsController.prototype.start)),
 
-            async function ConnectorsController_start(request: ExRequest, response: ExResponse, next: any) {
+            async function ConnectionsController_start(request: ExRequest, response: ExResponse, next: any) {
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
             let validatedArgs: any[] = [];
             try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsConnectorsController_start, request, response });
+                validatedArgs = templateService.getValidatedArgs({ args: argsConnectionsController_start, request, response });
 
                 const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
 
-                const controller: any = await container.get<ConnectorsController>(ConnectorsController);
+                const controller: any = await container.get<ConnectionsController>(ConnectionsController);
                 if (typeof controller['setStatus'] === 'function') {
                 controller.setStatus(undefined);
                 }
@@ -14554,6 +14691,42 @@ export function RegisterRoutes(app: Router) {
                 next,
                 validatedArgs,
                 successStatus: 200,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsConnectionsController_refreshShopifyData: Record<string, TsoaRoute.ParameterSchema> = {
+                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"connectionUuid":{"dataType":"string","required":true}}},
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+        };
+        app.post('/api/v1/connections/refresh',
+            ...(fetchMiddlewares<RequestHandler>(ConnectionsController)),
+            ...(fetchMiddlewares<RequestHandler>(ConnectionsController.prototype.refreshShopifyData)),
+
+            async function ConnectionsController_refreshShopifyData(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsConnectionsController_refreshShopifyData, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ConnectionsController>(ConnectionsController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'refreshShopifyData',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
               });
             } catch (err) {
                 return next(err);

@@ -1,6 +1,8 @@
 // ConnectionsModal.tsx
 import { FC } from 'react';
 import { Modal, Group, Text, Stack, TextInput, Button } from '@mantine/core';
+import { Connection } from '@lightdash/common';
+import { ConnectionType } from '@lightdash/common';
 
 interface ConnectionsModalProps {
   opened: boolean;
@@ -9,6 +11,7 @@ interface ConnectionsModalProps {
   setShopUrl: (v: string) => void;
   handleRefresh: () => void;
   handleConnect: (config: any) => void;
+  selectedConnection: Connection | null;
   config: Record<string, any>;
 }
 
@@ -19,8 +22,10 @@ const ConnectionsModal: FC<ConnectionsModalProps> = ({
   setShopUrl,
   handleRefresh,
   handleConnect,
+  selectedConnection,
   config,
 }) => {
+  console.log('ConnectionsModal props:', config);
   const isValidShop = (s: string) => true
   //  /^[a-z0-9][a-z0-9-]*\.(myshopify\.com)$/i.test(s.trim());
 
@@ -45,6 +50,8 @@ const ConnectionsModal: FC<ConnectionsModalProps> = ({
       size="lg"
     >
       <Stack spacing="lg" mt="md">
+        {config.key === ConnectionType.SHOPIFY && (
+          <Text>
         <TextInput
           label="Store URL"
           placeholder="e.g. myshop.myshopify.com"
@@ -52,11 +59,14 @@ const ConnectionsModal: FC<ConnectionsModalProps> = ({
           onChange={(e) => setShopUrl(e.currentTarget.value)}
           radius="md"
         />
+        
+        </Text>
+        )}
         <Group position="right">
-          <Button variant="default" onClick={handleRefresh} disabled={!isValidShop(shopUrl)}>
+          <Button variant="default" onClick={handleRefresh} disabled={!isValidShop(shopUrl) || !!!selectedConnection}>
             Refresh Data
           </Button>
-          <Button onClick={() => handleConnect( config )} disabled={!isValidShop(shopUrl)}>
+          <Button onClick={() => handleConnect( config )} disabled={!isValidShop(shopUrl) || !!selectedConnection}>
             Connect
           </Button>
         </Group>

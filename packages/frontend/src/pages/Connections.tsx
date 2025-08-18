@@ -50,7 +50,7 @@ const Connections: FC = () => {
             };
 
             const resp = await lightdashApi<any>({
-                url: `/connectors/${config.key}/start`,
+                url: `/connections/${config.key}/start`,
                 method: 'POST',
                 body: JSON.stringify(payload),               // <- serialize
                 headers: { 'Content-Type': 'application/json' }, // <- set header
@@ -94,7 +94,7 @@ const Connections: FC = () => {
                         <Title order={5}>My Connections</Title>
                         <SimpleGrid cols={3} spacing="md">
                             {Object.entries(CONNECTORS_REGISTRY).map(([type, cfg]) => {
-                                const actual = connectedMap[type];
+                                const actual: Connection = connectedMap[type];
                                 return (
                                     <Card
                                         key={type}
@@ -123,7 +123,12 @@ const Connections: FC = () => {
                                             <Badge color={actual ? 'teal' : 'yellow'}>
                                                 {actual ? 'Connected' : 'Disconnected'}
                                             </Badge>
-                                            <IconArrowRight size={16} stroke={2} />
+                                            {actual && actual.type === 'ga' && <Text size="xs" color="dimmed">{actual.propertyId}</Text>}
+                                            {actual && actual.type === 'shopify' && (
+                                                <Text size="xs" color="dimmed">
+                                                    {actual.shopUrl || 'No store URL'}
+                                                </Text>
+                                            )}
                                         </Group>
                                     </Card>
                                 );
@@ -143,6 +148,7 @@ const Connections: FC = () => {
                                     handleConnect={handleConnect}
                                     handleRefresh={handleRefresh}
                                     config={selectedConfig || {}}
+                                    selectedConnection={selectedConnection}
                                     shopUrl={shopUrl}
                                     setShopUrl={setShopUrl}
                                 />

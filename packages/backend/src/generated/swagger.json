@@ -18131,7 +18131,7 @@
 				"type": "object",
 				"additionalProperties": true
 			},
-			"ConnApiSuccess_Connection-Array_": {
+			"ApiSuccess_Connection-Array_": {
 				"properties": {
 					"results": {
 						"items": {
@@ -25112,6 +25112,81 @@
 				"parameters": []
 			}
 		},
+		"/api/v1/auth/shopify/callback": {
+			"get": {
+				"operationId": "ShopifyAuthCallback",
+				"responses": {
+					"204": {
+						"description": "No content"
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Shopify"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/api/v1/auth/shopify/start": {
+			"get": {
+				"operationId": "ShopifyInstallRedirect",
+				"responses": {
+					"204": {
+						"description": "No content"
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Shopify"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/api/v1/auth/shopify/redirect2": {
+			"get": {
+				"operationId": "RedirectToEspn2",
+				"responses": {
+					"204": {
+						"description": "No content"
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Shopify"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
 		"/api/v1/auth/shopify/setup": {
 			"post": {
 				"operationId": "SetupShopifyUser",
@@ -25156,6 +25231,9 @@
 						"application/json": {
 							"schema": {
 								"properties": {
+									"connectionUuid": {
+										"type": "string"
+									},
 									"userUuid": {
 										"type": "string"
 									},
@@ -25164,58 +25242,8 @@
 									}
 								},
 								"required": [
+									"connectionUuid",
 									"userUuid",
-									"shopUrl"
-								],
-								"type": "object"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/v1/auth/shopify/refresh": {
-			"post": {
-				"operationId": "RefreshShopifyData",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiSuccessEmpty"
-								}
-							}
-						}
-					},
-					"default": {
-						"description": "Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorPayload"
-								}
-							}
-						}
-					}
-				},
-				"description": "Trigger Shopify data ingestion",
-				"tags": [
-					"Shopify"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"properties": {
-									"shopUrl": {
-										"type": "string"
-									}
-								},
-								"required": [
 									"shopUrl"
 								],
 								"type": "object"
@@ -30355,7 +30383,37 @@
 				}
 			}
 		},
-		"/api/v1/google-analytics/accounts": {
+		"/api/v1/auth/google-analytics/start": {
+			"get": {
+				"operationId": "GoogleAnalyticsAuthStart",
+				"responses": {
+					"204": {
+						"description": "No content"
+					}
+				},
+				"tags": [
+					"GoogleAnalytics"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/api/v1/auth/google-analytics/callback": {
+			"get": {
+				"operationId": "GoogleAnalyticsAuthCallback",
+				"responses": {
+					"204": {
+						"description": "No content"
+					}
+				},
+				"tags": [
+					"GoogleAnalytics"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/api/v1/auth/google-analytics/accounts": {
 			"get": {
 				"operationId": "ListAccounts",
 				"responses": {
@@ -30370,7 +30428,7 @@
 						}
 					}
 				},
-				"description": "OAuth2 callback from Google. Writes tokens to DB, marks connection inactive (pending selection),\nredirects to the UI which will open the GA selection modal.",
+				"description": "List GA accounts for a given connection.",
 				"tags": [
 					"GoogleAnalytics"
 				],
@@ -30387,7 +30445,7 @@
 				]
 			}
 		},
-		"/api/v1/google-analytics/properties": {
+		"/api/v1/auth/google-analytics/properties": {
 			"get": {
 				"operationId": "ListProperties",
 				"responses": {
@@ -30427,7 +30485,7 @@
 				]
 			}
 		},
-		"/api/v1/google-analytics/select": {
+		"/api/v1/auth/google-analytics/select": {
 			"post": {
 				"operationId": "SelectProperty",
 				"responses": {
@@ -31308,7 +31366,7 @@
 				]
 			}
 		},
-		"/api/v1/connectors/{key}/start": {
+		"/api/v1/connections/{key}/start": {
 			"post": {
 				"operationId": "Start",
 				"responses": {
@@ -31321,10 +31379,20 @@
 								}
 							}
 						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
 					}
 				},
 				"tags": [
-					"Connectors"
+					"Connections"
 				],
 				"security": [],
 				"parameters": [
@@ -31362,7 +31430,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ConnApiSuccess_Connection-Array_"
+									"$ref": "#/components/schemas/ApiSuccess_Connection-Array_"
 								}
 							}
 						}
@@ -31384,6 +31452,64 @@
 				],
 				"security": [],
 				"parameters": []
+			}
+		},
+		"/api/v1/connections/refresh": {
+			"post": {
+				"operationId": "RefreshData",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiSuccess_any_"
+										},
+										{
+											"$ref": "#/components/schemas/ApiErrorPayload"
+										}
+									]
+								}
+							}
+						}
+					},
+					"default": {
+						"description": "Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorPayload"
+								}
+							}
+						}
+					}
+				},
+				"description": "Trigger Shopify data ingestion",
+				"tags": [
+					"Connections"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"connectionUuid": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"connectionUuid"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/api/v1/comments/dashboards/{dashboardUuid}/{dashboardTileUuid}": {

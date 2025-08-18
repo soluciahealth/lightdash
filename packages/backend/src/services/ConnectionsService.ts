@@ -13,6 +13,13 @@ export class ConnectionService {
         this.database = database;
     }
 
+    async getConnectionByShopUrl(shopUrl: string): Promise<DbConnection | undefined> {
+        return this.database<DbConnection>(ConnectionsTableName)
+            .where('shop_url', shopUrl)
+            .andWhere('is_active', true)
+            .first();
+    }
+
     async getConnectionByUuid(connectionUuid: string): Promise<DbConnection | undefined> {
         return this.database<DbConnection>(ConnectionsTableName)
             .where('connection_uuid', connectionUuid)

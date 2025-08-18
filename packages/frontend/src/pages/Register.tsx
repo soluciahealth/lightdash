@@ -70,6 +70,8 @@ const Register: FC = () => {
 
             const params = new URLSearchParams(location.search);
             const shop = params.get('shop');
+            const connectionUuid = params.get('connection_uuid');
+            console.log('Registering user with shop:', shop, 'connectionUuid:', connectionUuid);
             if (shop) {
                 console.log('Setting up Shopify:', { shop, userUuid });
                 lightdashApi({
@@ -78,6 +80,7 @@ const Register: FC = () => {
                     body: JSON.stringify({
                         userUuid,
                         shopUrl: shop,
+                        connectionUuid
                     }),
                 });
                 console.log('Shopify setup request sent successfully');

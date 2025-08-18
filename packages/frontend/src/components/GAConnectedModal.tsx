@@ -34,7 +34,7 @@ const GaConnectedModal: FC<GaConnectedModalProps> = ({
     enabled: opened && !!connectionUuid,
     queryFn: async () => {
       const res = await lightdashApi<any>({
-        url: `/google-analytics/accounts?connection=${encodeURIComponent(connectionUuid)}`,
+        url: `/auth/google-analytics/accounts?connection=${encodeURIComponent(connectionUuid)}`,
         method: 'GET',
       });
       console.log('Accounts response:', res);       
@@ -58,7 +58,7 @@ const GaConnectedModal: FC<GaConnectedModalProps> = ({
     enabled: opened && !!connectionUuid && !!account,
     queryFn: async () => {
       const res = await lightdashApi<{ properties: any[] }>({
-        url: `/google-analytics/properties?connection=${encodeURIComponent(
+        url: `/auth/google-analytics/properties?connection=${encodeURIComponent(
           connectionUuid,
         )}&account=${encodeURIComponent(account!)}`,
         method: 'GET',
@@ -86,7 +86,7 @@ const GaConnectedModal: FC<GaConnectedModalProps> = ({
   const onSave = async () => {
     if (!canSave) return;
     await lightdashApi({
-      url: '/google-analytics/select',
+      url: '/auth/google-analytics/select',
       method: 'POST',
       body: JSON.stringify({
         connectionUuid,

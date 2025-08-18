@@ -14,7 +14,5 @@ export const CONNECTORS_REGISTRY = {
     preFields: [],
 
     postConfig: 'ga_property',
-    // optionsEndpoint: '/api/connectors/google_analytics/properties',
-    // ingestEndpoint: '/api/connectors/google_analytics/ingest',
   },
 } as const;
