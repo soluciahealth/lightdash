@@ -92,12 +92,11 @@ export class ShopifyAuthController extends BaseController {
             // Optionally wire the current user to the shop
             if (isCurrentUser) {
                 await shopService.setupUserForShop(shopRecord, req.user!);
+                req.res?.redirect('/');
+            } else {
+                // HACK: Maybe insecure
+                req.res?.redirect(`/register?shop=${encodeURIComponent(normalizedShop)}&connection_uuid=${shopRecord.connection_uuid}`);
             }
-
-            // HACK: Maybe insecure
-            const redirectUrl = isNew ? `/register?shop=${encodeURIComponent(normalizedShop)}&connection_uuid=${shopRecord.connection_uuid}` : `/`;
-
-            req.res?.redirect(redirectUrl);
         } catch (e: any) {
             console.error('Shopify callback error:', e);
             req.res?.status(500).send(`Server error: ${e.message}`);
